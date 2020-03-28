@@ -23,7 +23,7 @@ class Arguments:
         self.num_class = 600
         self.shot = 5
         self.query = 5
-        self.query_val = 15
+        self.query_val = 10
         self.n_base = 80
         self.train_way = 20
         self.test_way = 5
@@ -32,10 +32,10 @@ class Arguments:
 epochs = 1000
 learning_rate = 1e-5
 # Options
-cnn_store_name = 'CNN'
+store_name = 'CNN'
 checkpoint = None
 log_interval = 20
-device_list = '1'
+device_list = '2'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -59,7 +59,7 @@ train_sampler = CategoriesSampler_train_100way(trainset.label, 100,
 train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler,
                         num_workers=num_workers, pin_memory=True)
 valset = MiniImageNet('trainvaltest')
-val_sampler = CategoriesSampler_val_100way(valset.label, 400,
+val_sampler = CategoriesSampler_val_100way(valset.label, 100,
                         args.test_way, args.shot, args.query_val)
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                         num_workers=num_workers, pin_memory=True)

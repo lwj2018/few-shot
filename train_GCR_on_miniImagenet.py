@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 
 from datasets.mini_imagenet import MiniImageNet
 from datasets.samplers import CategoriesSampler_train_100way, CategoriesSampler_val_100way
-from models.convnet import Convnet
-from models.GCR import Registrator
+from models.GCR import GCR
 from utils.ioUtils import *
+from utils.critUtils import loss_for_gcr
 
 # Hyper params 
 max_epoch = 200
@@ -50,7 +50,7 @@ val_sampler = CategoriesSampler_val_100way(valset.label, 400,
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                         num_workers=num_workers, pin_memory=True)
 model_cnn = Convnet().to(device)
-model_reg = Registrator().to(device)
+model = GCR(model_cnn).to(device)
 
 # Resume model
 if cnn_ckpt is not None:
@@ -65,12 +65,14 @@ global_base.requires_grad = True
 global_novel.requires_grad = True
 
 # Create loss criterion & optimizer
-optimizer_cnn = torch.optim.SGD(model_cnn.parameters(), lr=learning_rate,momentum=0.9)
-optimizer_reg = torch.optim.SGD(model_reg.parameters(), lr=learning_rate,momentum=0.9)
+criterion = loss_for_gcr()
+
+optimizer_cnn = torch.optim.SGD(model.baseModel.parameters(), lr=learning_rate,momentum=0.9)
+optimizer_reg = torch.optim.SGD(model.registrator.parameters(), lr=learning_rate,momentum=0.9)
 optimizer_global1 = torch.optim.SGD(global_base, lr=learning_rate,momentum=0.9)
 optimizer_global2 = torch.optim.SGD(global_novel, lr=learning_rate,momentum=0.9)
 
 lr_scheduler_cnn = torch.optim.lr_scheduler.MultiStepLR(optimizer_cnn, milestones=[30,60], gamma=0.1)
-lr_scheduler_reg = torch.optim.lr_scheduler.MultiStepLR(optimizer_atten, milestones=[30,60], gamma=0.1)
+lr_scheduler_reg = torch.optim.lr_scheduler.MultiStepLR(optimizer_reg, milestones=[30,60], gamma=0.1)
 lr_scheduler_global1 = torch.optim.lr_scheduler.MultiStepLR(optimizer_global1, milestones=[30,60], gamma=0.1)
 lr_scheduler_global2 = torch.optim.lr_scheduler.MultiStepLR(optimizer_global2, milestones=[30,60], gamma=0.1)

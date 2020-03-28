@@ -1,7 +1,5 @@
 import torch
 import numpy as np
-from IPython import embed
-
 
 class CategoriesSampler():
 
@@ -146,6 +144,7 @@ class CategoriesSampler_train_100way():
             shot_batch = []
             # 随机选出n_cls个类
             classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            # 排序以保证基类在前，新类在后
             classes,order =classes.sort()
 
             for c in classes:
@@ -195,8 +194,8 @@ class CategoriesSampler_val_100way():
                 l = self.m_ind[c]
                 #pos = torch.cat([torch.Tensor(range(0,self.n_shot)).type(torch.LongTensor), self.n_shot+torch.randperm(len(l)-self.n_shot)[:self.n_query]])
                 # 利用训练时未使用过的最后100个样本
-                # 5 * (5+15) = 100
-                tmp = torch.randperm(100)+500
+                # shot+query_val = 5+15 = 20
+                tmp = torch.randperm(100)[:20]+500
                 batch.append(l[tmp])
             batch = torch.stack(batch).t().reshape(-1)
             yield batch

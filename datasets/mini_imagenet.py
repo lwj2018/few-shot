@@ -5,8 +5,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-image_root = '/Users/liweijie/datasets/images'
-csv_root = '/Users/liweijie/few-shot/csv'
+image_root = '/home/liweijie/Data/miniImagenet/images'
+csv_root = '/home/liweijie/projects/few-shot/csv'
 
 class MiniImageNet(Dataset):
 
@@ -53,7 +53,18 @@ class MiniImageNet(Dataset):
 
     def __getitem__(self, i):
         path, label = self.data[i], self.label[i]
-        image1 = self.transform_train(Image.open(path).convert('RGB'))
-        image2 = self.transform_test(Image.open(path).convert('RGB'))
+        try:
+            image = Image.open(path).convert('RGB')
+        except:
+            print(path)
+        image1 = self.transform_train(image)
+        image2 = self.transform_test(image)
         image = torch.cat([image1, image2])
         return image, label
+
+# Test
+if __name__ == '__main__':
+    dataset = MiniImageNet('trainvaltest')
+    # Check every file in the dataset
+    for i in range(len(dataset)):
+        dataset[i]

@@ -45,7 +45,6 @@ def eval_cnn(model, criterion, valloader,
         data_query = data_query[:,3:,:]
         input = torch.cat([data_shot,data_query],0)
 
-        optimizer.zero_grad()
         # forward
         outputs = model(input)
 
@@ -68,9 +67,10 @@ def eval_cnn(model, criterion, valloader,
             info = ('[Eval] Epoch: [{0}][{1}/{2}]\t'
                     'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s)\t'
                     'Data {data_time.val:.3f}s ({data_time.avg:.3f}s)\t'
+                    'Acc {acc.avg:.3f}%'
                     .format(
                         epoch, i, len(valloader), batch_time=batch_time,
-                        data_time=data_time))
+                        data_time=data_time, acc=avg_acc))
             print(info)
     
     accumulate_info = ('[Test] Epoch: [{0}] [len: {1}]\t'
