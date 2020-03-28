@@ -20,7 +20,7 @@ def conv_block_1d(in_channels, out_channels):
 
 class Convnet(nn.Module):
 
-    def __init__(self, x_dim=3, hid_dim=64, z_dim=64):
+    def __init__(self, out_dim, x_dim=3, hid_dim=64, z_dim=64, feature_dim = 1600):
         super().__init__()
         self.encoder = nn.Sequential(
             conv_block(x_dim, hid_dim),
@@ -28,8 +28,15 @@ class Convnet(nn.Module):
             conv_block(hid_dim, hid_dim),
             conv_block(hid_dim, z_dim),
         )
-        self.out_channels = 1600
+        self.feature_dim = feature_dim
+        self.fc = nn.Linear(feature_dim,out_dim)
+
+    def get_feature(self, x):
+        x = self.encoder(x)
+        x = x.view(x.size(0), -1)
+        return x
 
     def forward(self, x):
-        x = self.encoder(x)
-        return x.view(x.size(0), -1)
+        x = self.get_feature(x)
+        x = self.fc(x)
+        return x

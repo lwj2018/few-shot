@@ -6,6 +6,7 @@ class GCR(nn.Module):
     def __init__(self,baseModel):
         super(GCR,self).__init__()
         self.baseModel = baseModel
+        self.registrator = Registrator()
 
     def forward(self, input):
         pass

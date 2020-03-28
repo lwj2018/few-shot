@@ -64,6 +64,7 @@ global_novel = global_proto[n_base:,:]
 global_base.requires_grad = True
 global_novel.requires_grad = True
 
+# Create loss criterion & optimizer
 optimizer_cnn = torch.optim.SGD(model_cnn.parameters(), lr=learning_rate,momentum=0.9)
 optimizer_reg = torch.optim.SGD(model_reg.parameters(), lr=learning_rate,momentum=0.9)
 optimizer_global1 = torch.optim.SGD(global_base, lr=learning_rate,momentum=0.9)

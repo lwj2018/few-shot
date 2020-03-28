@@ -5,14 +5,13 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-
-ROOT_PATH = './materials/'
-
+image_root = '/Users/liweijie/datasets/images'
+csv_root = '/Users/liweijie/few-shot/csv'
 
 class MiniImageNet(Dataset):
 
     def __init__(self, setname):
-        csv_path = osp.join(ROOT_PATH, setname + '.csv')
+        csv_path = osp.join(csv_root, setname + '.csv')
         lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
 
         data = []
@@ -23,7 +22,7 @@ class MiniImageNet(Dataset):
 
         for l in lines:
             name, wnid = l.split(',')
-            path = osp.join(ROOT_PATH, 'images', name)
+            path = osp.join(image_root, name)
             if wnid not in self.wnids:
                 self.wnids.append(wnid)
                 lb += 1
