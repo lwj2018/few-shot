@@ -33,9 +33,9 @@ epochs = 1000
 learning_rate = 1e-5
 # Options
 store_name = 'CNN'
-checkpoint = None
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 log_interval = 20
-device_list = '2'
+device_list = '0'
 num_workers = 8
 model_path = "./checkpoint"
 

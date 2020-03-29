@@ -12,15 +12,19 @@ def train_cnn(model, criterion, optimizer, trainloader,
     data_time = AverageMeter()
     losses = AverageMeter()
     avg_acc = AverageMeter()
-    avg_bleu = AverageMeter()
     avg_proto = AverageMeter()
+    # Create recorder
+    averagers = [losses, avg_acc]
+    names = ['train loss','train acc']
+    recoder = Recorder(averagers,names,writer,batch_time,data_time)
     # Set trainning mode
     model.train()
 
-    end = time.time()
+    recoder.tik()
+    recoder.data_tik()
     for i, batch in enumerate(trainloader,1):
         # measure data loading time
-        data_time.update(time.time() - end)
+        recoder.data_tok()
 
         # get the data and labels
         data,lab = [_.to(device) for _ in batch]
@@ -41,7 +45,6 @@ def train_cnn(model, criterion, optimizer, trainloader,
 
         # backward & optimize
         loss.backward()
-
         optimizer.step()
 
         # Calculate global proto
@@ -56,34 +59,20 @@ def train_cnn(model, criterion, optimizer, trainloader,
         acc = accuracy(outputs, lab)[0]
 
         # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
+        recoder.tok()
+        recoder.tik()
+        recoder.data_tik()
 
         # update average value
-        N = lab.size(0)
-        losses.update(loss.item(),N)
-        avg_acc.update(acc,N)
+        vals = [loss.item(),acc]
+        recoder.update(vals)
         avg_proto.update(episodic_proto)
 
+        # logging
         if i==0 or i % log_interval == log_interval-1:
-            info = ('Epoch: [{0}][{1}/{2}]\t'
-                    'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s)\t'
-                    'Data {data_time.val:.3f}s ({data_time.avg:.3f}s)\t'
-                    'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                    'acc {acc.val:.3f} ({acc.avg:.3f})\t'
-                    .format(
-                        epoch, i, len(trainloader), batch_time=batch_time,
-                        data_time=data_time, loss=losses,  acc=avg_acc))
-            print(info)
-            writer.add_scalar('train loss',
-                    losses.avg,
-                    epoch * len(trainloader) + i)
-            writer.add_scalar('train acc',
-                    avg_acc.avg,
-                    epoch * len(trainloader) + i)
+            recoder.log(epoch,i,len(trainloader))
             # Reset average meters 
-            losses.reset()
-            avg_acc.reset()
+            recoder.reset()        
 
     global_proto = avg_proto.avg
     return global_proto
@@ -98,14 +87,19 @@ def train(model, global_base, global_novel, criterion,
     avg_loss2 = AverageMeter()
     avg_acc1 = AverageMeter()
     avg_acc2 = AverageMeter()
+    # Create recorder
+    averagers = [avg_loss1, avg_loss2, avg_acc1, avg_acc2]
+    names = ['train loss1','train loss2','train acc1','train acc2']
+    recoder = Recorder(averagers,names,writer,batch_time,data_time)
     # Set trainning mode
     model_cnn.train()
     model_reg.train()
 
-    end = time.time()
+    recoder.tik()
+    recoder.data_tik()
     for i, batch in enumerate(trainloader):
         # measure data loading time
-        data_time.update(time.time() - end)
+        recoder.data_tok()
 
         # get the inputs and labels
         data, lab = [_.to(device) for _ in batch]
@@ -117,7 +111,7 @@ def train(model, global_base, global_novel, criterion,
         data_shot = data_shot[:,:3,:]
         data_query = data_query[:,3:,:]
 
-        logits, label, logits2, train_gt = 
+        logits, label, logits2, train_gt = \
                 model(global_base,global_novel,data_shot,data_query,lab)
         # compute the loss
         loss, loss1, loss2 = criterion(logits, label, logits2, train_gt)
@@ -139,43 +133,16 @@ def train(model, global_base, global_novel, criterion,
         acc2 = accuracy(logits2, train_gt)
 
         # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
+        recoder.tok()
+        recoder.tik()
+        recoder.data_tik()
 
         # update average value
-        avg_loss1.update(loss1.item())
-        avg_loss2.update(loss2.item())
-        avg_acc1.update(acc1)
-        avg_acc2.update(acc2)
+        vals = [loss1.item(),loss2.item(),acc1,acc2]
+        recoder.update(vals)
 
         if i % log_interval == log_interval-1:
-            info = ('Epoch: [{0}][{1}/{2}]\t'
-                    'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s)\t'
-                    'Data {data_time.val:.3f}s ({data_time.avg:.3f}s)\t'
-                    'Loss1 {loss1.val:.4f} ({loss1.avg:.4f})\t'
-                    'Loss2 {loss2.val:.4f} ({loss2.avg:.4f})\t'
-                    'Acc1 {acc1.val:.3f}% ({acc1.avg:.3f}%)\t'
-                    'Acc2 {acc2.val:.3f}% ({acc2.avg:.3f}%)'
-                    .format(
-                        epoch, i, len(trainloader), batch_time=batch_time,
-                        data_time=data_time, loss1=avg_loss1, loss2=avg_loss2,
-                        acc1=avg_acc2, acc2=avg_acc2)
-            print(info)
-            writer.add_scalar('train loss1',
-                    avg_loss2.avg,
-                    epoch * len(trainloader) + i)
-            writer.add_scalar('train loss2',
-                    avg_loss2.avg,
-                    epoch * len(trainloader) + i)
-            writer.add_scalar('train acc1',
-                    avg_acc2.avg,
-                    epoch * len(trainloader) + i)
-            writer.add_scalar('train acc2',
-                    avg_acc2.avg,
-                    epoch * len(trainloader) + i)
+            recoder.log(epoch,i,len(trainloader))
             # Reset average meters 
-            avg_loss1.reset()
-            avg_loss2.reset()
-            avg_acc2.reset()
-            avg_acc2.reset()
+            recoder.reset()
 
