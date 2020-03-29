@@ -20,7 +20,7 @@ from datasets.samplers import CategoriesSampler_train_100way, CategoriesSampler_
 
 class Arguments:
     def __init__(self):
-        self.num_class = 600
+        self.num_class = 100
         self.shot = 5
         self.query = 5
         self.query_val = 10
@@ -33,6 +33,7 @@ epochs = 1000
 learning_rate = 1e-5
 # Options
 store_name = 'CNN'
+gproto_name = 'global_proto'
 checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 log_interval = 20
 device_list = '0'
@@ -87,7 +88,7 @@ for epoch in range(start_epoch, epochs):
         'state_dict': model.state_dict(),
         'best': best_acc
     }, is_best, model_path, store_name)
-    save_global_proto(global_proto, is_best, model_path)
+    save_checkpoint(global_proto, is_best, model_path, gproto_name)
     print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
 print("Training Finished".center(60, '#'))

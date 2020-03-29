@@ -92,8 +92,7 @@ def train(model, global_base, global_novel, criterion,
     names = ['train loss1','train loss2','train acc1','train acc2']
     recoder = Recorder(averagers,names,writer,batch_time,data_time)
     # Set trainning mode
-    model_cnn.train()
-    model_reg.train()
+    model.train()
 
     recoder.tik()
     recoder.data_tik()
@@ -111,10 +110,10 @@ def train(model, global_base, global_novel, criterion,
         data_shot = data_shot[:,:3,:]
         data_query = data_query[:,3:,:]
 
-        logits, label, logits2, train_gt = \
+        logits, label, logits2, gt = \
                 model(global_base,global_novel,data_shot,data_query,lab)
         # compute the loss
-        loss, loss1, loss2 = criterion(logits, label, logits2, train_gt)
+        loss, loss1, loss2 = criterion(logits, label, logits2, gt)
 
         # backward & optimize
         optimizer_cnn.zero_grad()
@@ -129,8 +128,8 @@ def train(model, global_base, global_novel, criterion,
         optimizer_global2.step()
 
         # compute the metrics
-        acc1 = accuracy(logits, label)
-        acc2 = accuracy(logits2, train_gt)
+        acc1 = accuracy(logits, label)[0]
+        acc2 = accuracy(logits2, gt)[0]
 
         # measure elapsed time
         recoder.tok()
@@ -145,4 +144,5 @@ def train(model, global_base, global_novel, criterion,
             recoder.log(epoch,i,len(trainloader))
             # Reset average meters 
             recoder.reset()
+    return global_base, global_novel
 

@@ -58,8 +58,7 @@ def eval_cnn(model, criterion, valloader,
     return recoder.get_avg('val acc')
 
 def eval(model, global_base, global_novel, criterion,
-          optimizer_cnn, optimizer_reg, optimizer_global1,
-          optimizer_global2, valloader, device, epoch, 
+          valloader, device, epoch, 
           log_interval, writer, args):
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -72,8 +71,7 @@ def eval(model, global_base, global_novel, criterion,
     names = ['val loss1','val loss2','val acc1','val acc2']
     recoder = Recorder(averagers,names,writer,batch_time,data_time)
     # Set trainning mode
-    model_cnn.eval()
-    model_reg.eval()
+    model.eval()
 
     recoder.tik()
     recoder.data_tik()
@@ -88,17 +86,17 @@ def eval(model, global_base, global_novel, criterion,
         p = args.shot * args.test_way
         data_shot = data[:p]
         data_query = data[p:]
-        data_shot = data_shot[:,:3,:]
+        data_shot = data_shot[:,3:,:]
         data_query = data_query[:,3:,:]
 
-        logits, label, logits2, train_gt = \
-                model(global_base,global_novel,data_shot,data_query,lab)
+        logits, label, logits2, gt = \
+                model(global_base,global_novel,data_shot,data_query,lab,mode='eval')
         # compute the loss
-        loss, loss1, loss2 = criterion(logits, label, logits2, train_gt)
+        loss, loss1, loss2 = criterion(logits, label, logits2, gt)
 
         # compute the metrics
-        acc1 = accuracy(logits, label)
-        acc2 = accuracy(logits2, train_gt)
+        acc1 = accuracy(logits, label)[0]
+        acc2 = accuracy(logits2, gt)[0]
 
         # measure elapsed time
         recoder.tok()
