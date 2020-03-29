@@ -3,23 +3,8 @@ import torch.nn.functional as F
 import numpy
 import time
 from utils.metricUtils import *
-
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
+from utils.Averager import AverageMeter
+from utils.Recorder import Recorder
         
 def train_cnn(model, criterion, optimizer, trainloader, 
         device, epoch, log_interval, writer, args):
@@ -160,8 +145,8 @@ def train(model, global_base, global_novel, criterion,
         # update average value
         avg_loss1.update(loss1.item())
         avg_loss2.update(loss2.item())
-        avg_acc1.update(acc1.item())
-        avg_acc2.update(acc2.item())
+        avg_acc1.update(acc1)
+        avg_acc2.update(acc2)
 
         if i % log_interval == log_interval-1:
             info = ('Epoch: [{0}][{1}/{2}]\t'
