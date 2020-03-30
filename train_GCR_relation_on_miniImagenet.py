@@ -10,7 +10,7 @@ from datasets.samplers import CategoriesSampler_train_100way, CategoriesSampler_
 from models.GCR_relation import GCR_relation
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
-from utils.critUtils import loss_for_gcr_relation
+from utils.critUtils import loss_for_gcr
 from utils.trainUtils import train
 from utils.testUtils import eval
 from torch.utils.tensorboard import SummaryWriter
@@ -27,16 +27,16 @@ class Arguments:
         self.feature_dim = 1600
 # Hyper params 
 epochs = 1000
-learning_rate = 1e-5
+learning_rate = 1e-3
 # Options
 store_name = 'miniImage_GCR_r'
 gproto_name = 'miniImage_gcr_gproto_r'
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 reg_ckpt = None
-global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
-checkpoint = None
+global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/miniImage_gcr_gproto_r_checkpoint.pth.tar'
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_GCR_r_checkpoint.pth.tar'
 log_interval = 20
-device_list = '0'
+device_list = '2'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -76,14 +76,13 @@ if checkpoint is not None:
     start_epoch, best_acc = resume_model(model, checkpoint)
 global_proto = torch.load(global_ckpt)
 global_proto = global_proto[:args.num_class,:]
-global_base = torch.Tensor(global_proto[:args.n_base,:]).to(device)
-global_novel = torch.Tensor(global_proto[args.n_base:,:]).to(device)
-
-global_base.requires_grad = True
-global_novel.requires_grad = True
+global_base = global_proto[:args.n_base,:]
+global_base = global_base.detach().cuda()
+global_novel = global_proto[args.n_base:,:]
+global_novel = global_novel.detach().cuda()
 
 # Create loss criterion & optimizer
-criterion = loss_for_gcr_relation()
+criterion = loss_for_gcr()
 
 optimizer_cnn = torch.optim.SGD(model.baseModel.parameters(), lr=learning_rate,momentum=0.9)
 optimizer_reg = torch.optim.SGD(list(model.registrator.parameters())+\
@@ -111,9 +110,9 @@ for epoch in range(start_epoch, epochs):
     save_checkpoint({
         'epoch': epoch + 1,
         'state_dict': model.state_dict(),
+        'global_proto':torch.cat([global_base,global_novel],0),
         'best': best_acc
     }, is_best, model_path, store_name)
-    save_checkpoint(torch.cat([global_base,global_novel],0),is_best,model_path,gproto_name)
     print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
 print("Training Finished".center(60, '#'))

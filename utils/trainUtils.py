@@ -114,6 +114,7 @@ def train(model, global_base, global_novel, criterion,
                 model(global_base,global_novel,data_shot,data_query,lab)
         # compute the loss
         loss, loss1, loss2 = criterion(logits, label, logits2, gt)
+        print(model.relation2.fc1.weight.grad)
 
         # backward & optimize
         optimizer_cnn.zero_grad()

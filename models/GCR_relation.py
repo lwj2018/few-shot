@@ -66,7 +66,7 @@ class GCR_relation(nn.Module):
         global_new, proto_new = self.registrator(support_set=torch.cat([global_base,global_novel]), query_set=proto_final)
         # shape of the dist_metric is: way x total_class
         logits2 = self.relation2(proto_new, global_new)
-        gt = convert_to_onehot(gt,global_new.size(0))
+        # gt = convert_to_onehot(gt,global_new.size(0))
 
         similarity = F.softmax(logits2)
         feature = torch.matmul(similarity, torch.cat([global_base,global_novel]))
@@ -76,7 +76,7 @@ class GCR_relation(nn.Module):
         logits = self.relation1(self.baseModel(data_query),feature)
         label = torch.arange(way).repeat(query)
         label = label.type(torch.cuda.LongTensor)
-        label = convert_to_onehot(label,way)
+        # label = convert_to_onehot(label,way)
 
         return logits, label, logits2, gt
         
