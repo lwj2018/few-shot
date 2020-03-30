@@ -11,7 +11,7 @@ from models.GCR_relation import GCR_relation
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
 from utils.critUtils import loss_for_gcr
-from utils.trainUtils import train
+from utils.trainUtils import train,train_gcr_relation
 from utils.testUtils import eval
 from torch.utils.tensorboard import SummaryWriter
 
@@ -33,8 +33,10 @@ store_name = 'miniImage_GCR_r'
 gproto_name = 'miniImage_gcr_gproto_r'
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 reg_ckpt = None
-global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/miniImage_gcr_gproto_r_checkpoint.pth.tar'
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_GCR_r_checkpoint.pth.tar'
+global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
+# global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/miniImage_gcr_gproto_r_checkpoint.pth.tar'
+# checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_GCR_r_checkpoint.pth.tar'
+checkpoint = None
 log_interval = 20
 device_list = '2'
 num_workers = 8
@@ -76,6 +78,7 @@ if checkpoint is not None:
     start_epoch, best_acc = resume_model(model, checkpoint)
 global_proto = torch.load(global_ckpt)
 global_proto = global_proto[:args.num_class,:]
+global_proto = torch.Tensor(global_proto)
 global_base = global_proto[:args.n_base,:]
 global_base = global_base.detach().cuda()
 global_novel = global_proto[args.n_base:,:]
@@ -85,8 +88,9 @@ global_novel = global_novel.detach().cuda()
 criterion = loss_for_gcr()
 
 optimizer_cnn = torch.optim.SGD(model.baseModel.parameters(), lr=learning_rate,momentum=0.9)
-optimizer_reg = torch.optim.SGD(list(model.registrator.parameters())+\
-    list(model.relation1.parameters())+list(model.relation2.parameters()), lr=learning_rate,momentum=0.9)
+optimizer_reg = torch.optim.SGD(model.registrator.parameters(), lr=learning_rate,momentum=0.9)
+optimizer_relation1 = torch.optim.SGD(model.relation1.parameters(), lr=1e-3,momentum=0.9)
+optimizer_relation2 = torch.optim.SGD(model.relation2.parameters(), lr=learning_rate,momentum=0.9)
 optimizer_global1 = torch.optim.SGD([global_base], lr=learning_rate,momentum=0.9)
 optimizer_global2 = torch.optim.SGD([global_novel], lr=learning_rate,momentum=0.9)
 
@@ -99,8 +103,8 @@ lr_scheduler_global2 = torch.optim.lr_scheduler.MultiStepLR(optimizer_global2, m
 print("Training Started".center(60, '#'))
 for epoch in range(start_epoch, epochs):
     # Train the model
-    global_base, global_novel = train(model,global_base,global_novel,criterion,optimizer_cnn,optimizer_reg,optimizer_global1,
-        optimizer_global2,train_loader,device,epoch,log_interval,writer,args)
+    global_base, global_novel = train_gcr_relation(model,global_base,global_novel,criterion,optimizer_cnn,optimizer_reg,optimizer_global1,
+        optimizer_global2,optimizer_relation1,optimizer_relation2,train_loader,device,epoch,log_interval,writer,args)
     # Eval the model
     acc = eval(model,global_base,global_novel,criterion,val_loader,device,epoch,log_interval,writer,args)
     # Save model

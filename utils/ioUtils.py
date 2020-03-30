@@ -19,6 +19,7 @@ def resume_model(model, checkpoint):
 
     epoch = params_dict['epoch']
     best = params_dict['best']
+    print(params_dict['global_proto'])
     print("Load model from {}: \n"
     "Epoch: {}\n"
     "Best: {:.3f}%".format(checkpoint,epoch,best))

@@ -68,7 +68,9 @@ class GCR_relation(nn.Module):
         logits2 = self.relation2(proto_new, global_new)
         # gt = convert_to_onehot(gt,global_new.size(0))
 
-        similarity = F.softmax(logits2)
+        # logits2 = logits2.log()
+        # similarity = F.softmax(logits2)
+        similarity = logits2
         feature = torch.matmul(similarity, torch.cat([global_base,global_novel]))
         # shape of data_query is: (query x way) x ...
         # shape of feature is: way x f_dim(1600)
