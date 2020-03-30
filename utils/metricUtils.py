@@ -4,6 +4,8 @@ import numpy
 
 def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""
+    if len(target.size()) == 2:
+        target = target.argmax(-1)
     maxk = max(topk)
     batch_size = target.size(0)
 

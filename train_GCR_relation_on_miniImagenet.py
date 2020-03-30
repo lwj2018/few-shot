@@ -7,10 +7,10 @@ from torch.utils.data import DataLoader
 
 from datasets.mini_imagenet import MiniImageNet
 from datasets.samplers import CategoriesSampler_train_100way, CategoriesSampler_val_100way
-from models.GCR import GCR
+from models.GCR_relation import GCR_relation
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
-from utils.critUtils import loss_for_gcr
+from utils.critUtils import loss_for_gcr_relation
 from utils.trainUtils import train
 from utils.testUtils import eval
 from torch.utils.tensorboard import SummaryWriter
@@ -29,14 +29,14 @@ class Arguments:
 epochs = 1000
 learning_rate = 1e-5
 # Options
-store_name = 'miniImage_GCR'
-gproto_name = 'miniImage_gcr_gproto'
+store_name = 'miniImage_GCR_r'
+gproto_name = 'miniImage_gcr_gproto_r'
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 reg_ckpt = None
 global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
 checkpoint = None
 log_interval = 20
-device_list = '2'
+device_list = '0'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -50,7 +50,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Use writer to record
-writer = SummaryWriter(os.path.join('runs/miniImage_gcr', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
+writer = SummaryWriter(os.path.join('runs/miniImage_gcr_r', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
 # Prepare dataset & dataloader
 trainset = MiniImageNet('trainvaltest')
@@ -64,7 +64,7 @@ val_sampler = CategoriesSampler_val_100way(valset.label, 100,
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                         num_workers=num_workers, pin_memory=True)
 model_cnn = gcrConvnet().to(device)
-model = GCR(model_cnn,train_way=args.train_way,test_way=args.test_way,\
+model = GCR_relation(model_cnn,train_way=args.train_way,test_way=args.test_way,\
     shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 # Resume model
@@ -83,10 +83,11 @@ global_base.requires_grad = True
 global_novel.requires_grad = True
 
 # Create loss criterion & optimizer
-criterion = loss_for_gcr()
+criterion = loss_for_gcr_relation()
 
 optimizer_cnn = torch.optim.SGD(model.baseModel.parameters(), lr=learning_rate,momentum=0.9)
-optimizer_reg = torch.optim.SGD(model.registrator.parameters(), lr=learning_rate,momentum=0.9)
+optimizer_reg = torch.optim.SGD(list(model.registrator.parameters())+\
+    list(model.relation1.parameters())+list(model.relation2.parameters()), lr=learning_rate,momentum=0.9)
 optimizer_global1 = torch.optim.SGD([global_base], lr=learning_rate,momentum=0.9)
 optimizer_global2 = torch.optim.SGD([global_novel], lr=learning_rate,momentum=0.9)
 
