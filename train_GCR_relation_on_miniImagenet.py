@@ -11,7 +11,7 @@ from models.GCR_relation import GCR_relation
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
 from utils.critUtils import loss_for_gcr
-from utils.trainUtils import train,train_gcr_relation
+from utils.trainUtils import train
 from utils.testUtils import eval
 from torch.utils.tensorboard import SummaryWriter
 
@@ -26,11 +26,10 @@ class Arguments:
         self.test_way = 5
         self.feature_dim = 1600
 # Hyper params 
-epochs = 1000
+epochs = 500
 learning_rate = 1e-3
 # Options
 store_name = 'miniImage_GCR_r'
-gproto_name = 'miniImage_gcr_gproto_r'
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 reg_ckpt = None
 global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
@@ -96,10 +95,11 @@ lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30,60
 lr_scheduler_cnn = torch.optim.lr_scheduler.MultiStepLR(optimizer_cnn, milestones=[30,60], gamma=0.1)
 
 # Start training
+print("Train with global proto integrated, Save global")
 print("Training Started".center(60, '#'))
 for epoch in range(start_epoch, epochs):
     # Train the model
-    train_gcr_relation(model,criterion,optimizer,optimizer_cnn,train_loader,device,epoch,log_interval,writer,args)
+    train(model,criterion,optimizer,optimizer_cnn,train_loader,device,epoch,log_interval,writer,args)
     # Eval the model
     acc = eval(model,criterion,val_loader,device,epoch,log_interval,writer,args)
     # Save model
@@ -109,7 +109,8 @@ for epoch in range(start_epoch, epochs):
     save_checkpoint({
         'epoch': epoch + 1,
         'state_dict': model.state_dict(),
-        'best': best_acc
+        'best': best_acc,
+        'global_proto': torch.cat([model.global_base,model.global_novel])
     }, is_best, model_path, store_name)
     print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 

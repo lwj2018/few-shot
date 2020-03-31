@@ -5,7 +5,8 @@ import numpy as np
 from utils.metricUtils import euclidean_metric
 
 class GCR(nn.Module):
-    def __init__(self,baseModel,train_way=20,test_way=5,
+    def __init__(self,baseModel,global_base=None,global_novel=None,
+                train_way=20,test_way=5,
                 shot=5,query=5,query_val=15):
         super(GCR,self).__init__()
         self.train_way = train_way
@@ -16,8 +17,10 @@ class GCR(nn.Module):
 
         self.baseModel = baseModel
         self.registrator = Registrator()
+        self.global_base = global_base
+        self.global_novel = global_novel
 
-    def forward(self, global_base, global_novel, data_shot, data_query, lab, mode='train'):
+    def forward(self, data_shot, data_query, lab, mode='train'):
         if mode=='train':
             way = self.train_way
             query = self.query
@@ -57,20 +60,27 @@ class GCR(nn.Module):
 
         # shape of global_new is: total_class(100) x hidden_dim
         # shape of proto_new is: way(20 or 5) x hidden_dim
-        global_new, proto_new = self.registrator(support_set=torch.cat([global_base,global_novel]), query_set=proto_final)
+        global_new, proto_new = self.registrator(support_set=torch.cat([self.global_base,self.global_novel]), query_set=proto_final)
         # shape of the dist_metric is: way x total_class
         logits2 = euclidean_metric(proto_new, global_new)
 
         label = torch.arange(way).repeat(query)
         label = label.type(torch.cuda.LongTensor)
         similarity = F.softmax(logits2)
-        feature = torch.matmul(similarity, torch.cat([global_base,global_novel]))
+        feature = torch.matmul(similarity, torch.cat([self.global_base,self.global_novel]))
         # shape of data_query is: (query x way) x ...
         # shape of feature is: way x feature_dim
         # so the shape of result is (query x way) x way
         logits = euclidean_metric(self.baseModel(data_query),feature)
 
         return logits, label, logits2, gt
+
+    def get_optim_policies(self,lr):
+        return [
+            {'params':self.registrator.parameters(),'lr':lr},
+            {'params':self.global_base,'lr':lr},
+            {'params':self.global_novel,'lr':lr}
+        ]
         
 
 class Registrator(nn.Module):

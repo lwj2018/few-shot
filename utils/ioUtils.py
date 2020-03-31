@@ -19,23 +19,26 @@ def resume_model(model, checkpoint):
 
     epoch = params_dict['epoch']
     best = params_dict['best']
-    print(params_dict['global_proto'])
     print("Load model from {}: \n"
     "Epoch: {}\n"
     "Best: {:.3f}%".format(checkpoint,epoch,best))
     return params_dict['epoch'], params_dict['best']
 
-def resume_gcr(model, checkpoint):
+def resume_gcr_model(model, checkpoint, n_base):
+    # Now use
     params_dict = torch.load(checkpoint)
     state_dict = params_dict['state_dict']
     model.load_state_dict(state_dict)
+    model.global_base = params_dict['global_proto'][:n_base,:]
+    model.global_novel = params_dict['global_proto'][n_base:,:]
 
     epoch = params_dict['epoch']
     best = params_dict['best']
     print("Load model from {}: \n"
     "Epoch: {}\n"
     "Best: {:.3f}%".format(checkpoint,epoch,best))
-    return params_dict['epoch'], params_dict['best']#, params_dict['global_proto']
+    return params_dict['epoch'], params_dict['best']
+
 
 def resume_cnn_part(model, checkpoint):
     params_dict = torch.load(checkpoint)
