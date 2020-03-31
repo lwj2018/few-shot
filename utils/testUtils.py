@@ -57,7 +57,7 @@ def eval_cnn(model, criterion, valloader,
         
     return recoder.get_avg('val acc')
 
-def eval(model, global_base, global_novel, criterion,
+def eval(model, criterion,
           valloader, device, epoch, 
           log_interval, writer, args):
     batch_time = AverageMeter()
@@ -90,7 +90,7 @@ def eval(model, global_base, global_novel, criterion,
         data_query = data_query[:,3:,:]
 
         logits, label, logits2, gt = \
-                model(global_base,global_novel,data_shot,data_query,lab,mode='eval')
+                model(data_shot,data_query,lab,mode='eval')
         # compute the loss
         loss, loss1, loss2 = criterion(logits, label, logits2, gt)
 

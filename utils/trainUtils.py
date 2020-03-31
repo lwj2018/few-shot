@@ -147,9 +147,8 @@ def train(model, global_base, global_novel, criterion,
             recoder.reset()
     return global_base, global_novel
 
-def train_gcr_relation(model, global_base, global_novel, criterion,
-          optimizer_cnn, optimizer_reg, optimizer_global1,
-          optimizer_global2, optimizer_relation1, optimizer_relation2,
+def train_gcr_relation(model, criterion,
+          optimizer, optimizer_cnn,
           trainloader, device, epoch, 
           log_interval, writer, args):
     batch_time = AverageMeter()
@@ -182,25 +181,17 @@ def train_gcr_relation(model, global_base, global_novel, criterion,
         data_query = data_query[:,3:,:]
 
         logits, label, logits2, gt = \
-                model(global_base,global_novel,data_shot,data_query,lab)
+                model(data_shot,data_query,lab)
         # compute the loss
         loss, loss1, loss2 = criterion(logits, label, logits2, gt)
 
         # backward & optimize
+        optimizer.zero_grad()
         optimizer_cnn.zero_grad()
-        optimizer_reg.zero_grad()
-        optimizer_global1.zero_grad()
-        optimizer_global2.zero_grad()
-        optimizer_relation1.zero_grad()
-        optimizer_relation2.zero_grad()
         loss.backward()
         if epoch > 45:
             optimizer_cnn.step()
-        optimizer_reg.step()
-        optimizer_global1.step()
-        optimizer_global2.step()
-        optimizer_relation1.step()
-        optimizer_relation2.step()
+        optimizer.step()
 
         # compute the metrics
         acc1 = accuracy(logits, label)[0]
@@ -219,4 +210,4 @@ def train_gcr_relation(model, global_base, global_novel, criterion,
             recoder.log(epoch,i,len(trainloader))
             # Reset average meters 
             recoder.reset()
-    return global_base, global_novel
+

@@ -6,7 +6,8 @@ from utils.metricUtils import euclidean_metric
 from utils.critUtils import convert_to_onehot
 
 class GCR_relation(nn.Module):
-    def __init__(self,baseModel,train_way=20,test_way=5,
+    def __init__(self,baseModel,global_base=None,global_novel=None,
+                train_way=20,test_way=5,
                 shot=5,query=5,query_val=15,f_dim=1600,
                 z_dim=512):
         super(GCR_relation,self).__init__()
@@ -22,8 +23,10 @@ class GCR_relation(nn.Module):
         self.registrator = Registrator(f_dim,z_dim)
         self.relation1 = Relation1(2*f_dim)
         self.relation2 = Relation2(2*z_dim)
+        self.global_base = global_base
+        self.global_novel = global_novel
 
-    def forward(self, global_base, global_novel, data_shot, data_query, lab, mode='train'):
+    def forward(self, data_shot, data_query, lab, mode='train'):
         if mode=='train':
             way = self.train_way
             query = self.query
@@ -63,7 +66,7 @@ class GCR_relation(nn.Module):
 
         # shape of global_new is: total_class(100) x z_dim(512)
         # shape of proto_new is: way(20 or 5) x z_dim(512)
-        global_new, proto_new = self.registrator(support_set=torch.cat([global_base,global_novel]), query_set=proto_final)
+        global_new, proto_new = self.registrator(support_set=torch.cat([self.global_base,self.global_novel]), query_set=proto_final)
         # shape of the dist_metric is: way x total_class
         logits2 = self.relation2(proto_new, global_new)
         # gt = convert_to_onehot(gt,global_new.size(0))
@@ -71,7 +74,7 @@ class GCR_relation(nn.Module):
         # logits2 = logits2.log()
         # similarity = F.softmax(logits2)
         similarity = logits2
-        feature = torch.matmul(similarity, torch.cat([global_base,global_novel]))
+        feature = torch.matmul(similarity, torch.cat([self.global_base,self.global_novel]))
         # shape of data_query is: (query x way) x ...
         # shape of feature is: way x f_dim(1600)
         # so the shape of result is (query x way) x way
@@ -81,6 +84,15 @@ class GCR_relation(nn.Module):
         # label = convert_to_onehot(label,way)
 
         return logits, label, logits2, gt
+
+    def get_optim_policies(self,lr):
+        return [
+            {'params':self.registrator.parameters(),'lr':lr},
+            {'params':self.relation1.parameters(),'lr':lr},
+            {'params':self.relation2.parameters(),'lr':lr},
+            {'params':self.global_base,'lr':lr},
+            {'params':self.global_novel,'lr':lr}
+        ]
         
 
 class Registrator(nn.Module):

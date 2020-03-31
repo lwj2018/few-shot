@@ -66,8 +66,6 @@ val_sampler = CategoriesSampler_val_100way(valset.label, 100,
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                         num_workers=num_workers, pin_memory=True)
 model_cnn = gcrConvnet().to(device)
-model = GCR_relation(model_cnn,train_way=args.train_way,test_way=args.test_way,\
-    shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 # Resume model
 if cnn_ckpt is not None:
@@ -84,29 +82,26 @@ global_base = global_base.detach().cuda()
 global_novel = global_proto[args.n_base:,:]
 global_novel = global_novel.detach().cuda()
 
+model = GCR_relation(model_cnn,global_base=global_base,global_novel=global_novel,train_way=args.train_way,\
+    test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
+
 # Create loss criterion & optimizer
 criterion = loss_for_gcr()
 
+policies = model.get_optim_policies(learning_rate)
+optimizer = torch.optim.SGD(policies, momentum=0.9)
 optimizer_cnn = torch.optim.SGD(model.baseModel.parameters(), lr=learning_rate,momentum=0.9)
-optimizer_reg = torch.optim.SGD(model.registrator.parameters(), lr=learning_rate,momentum=0.9)
-optimizer_relation1 = torch.optim.SGD(model.relation1.parameters(), lr=1e-3,momentum=0.9)
-optimizer_relation2 = torch.optim.SGD(model.relation2.parameters(), lr=learning_rate,momentum=0.9)
-optimizer_global1 = torch.optim.SGD([global_base], lr=learning_rate,momentum=0.9)
-optimizer_global2 = torch.optim.SGD([global_novel], lr=learning_rate,momentum=0.9)
 
+lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30,60], gamma=0.1)
 lr_scheduler_cnn = torch.optim.lr_scheduler.MultiStepLR(optimizer_cnn, milestones=[30,60], gamma=0.1)
-lr_scheduler_reg = torch.optim.lr_scheduler.MultiStepLR(optimizer_reg, milestones=[30,60], gamma=0.1)
-lr_scheduler_global1 = torch.optim.lr_scheduler.MultiStepLR(optimizer_global1, milestones=[30,60], gamma=0.1)
-lr_scheduler_global2 = torch.optim.lr_scheduler.MultiStepLR(optimizer_global2, milestones=[30,60], gamma=0.1)
 
 # Start training
 print("Training Started".center(60, '#'))
 for epoch in range(start_epoch, epochs):
     # Train the model
-    global_base, global_novel = train_gcr_relation(model,global_base,global_novel,criterion,optimizer_cnn,optimizer_reg,optimizer_global1,
-        optimizer_global2,optimizer_relation1,optimizer_relation2,train_loader,device,epoch,log_interval,writer,args)
+    train_gcr_relation(model,criterion,optimizer,optimizer_cnn,train_loader,device,epoch,log_interval,writer,args)
     # Eval the model
-    acc = eval(model,global_base,global_novel,criterion,val_loader,device,epoch,log_interval,writer,args)
+    acc = eval(model,criterion,val_loader,device,epoch,log_interval,writer,args)
     # Save model
     # remember best acc and save checkpoint
     is_best = acc>best_acc
@@ -114,7 +109,6 @@ for epoch in range(start_epoch, epochs):
     save_checkpoint({
         'epoch': epoch + 1,
         'state_dict': model.state_dict(),
-        'global_proto':torch.cat([global_base,global_novel],0),
         'best': best_acc
     }, is_best, model_path, store_name)
     print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
