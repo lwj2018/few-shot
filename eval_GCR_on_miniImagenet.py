@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from datasets.mini_imagenet import MiniImageNet
 from datasets.samplers import CategoriesSampler_train_100way, CategoriesSampler_val_100way
-from models.GCR_relation import GCR_relation
+from models.GCR import GCR
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
 from utils.critUtils import loss_for_gcr
@@ -28,9 +28,9 @@ class Arguments:
 epochs = 1000
 learning_rate = 1e-3
 # Options
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200401miniImage_GCR_r_best.pth.tar'
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200401_miniImage_GCR_best.pth.tar'
 log_interval = 20
-device_list = '2'
+device_list = '1'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -44,7 +44,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Use writer to record
-writer = SummaryWriter(os.path.join('runs/eval_miniImage_gcr_r', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
+writer = SummaryWriter(os.path.join('runs/eval_miniImage_gcr', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
 # Prepare dataset & dataloader
 valset = MiniImageNet('test')
@@ -53,7 +53,7 @@ val_sampler = CategoriesSampler_val_100way(valset.label, 600,
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                         num_workers=num_workers, pin_memory=True)
 model_cnn = gcrConvnet().to(device)
-model = GCR_relation(model_cnn,train_way=args.train_way,\
+model = GCR(model_cnn,train_way=args.train_way,\
     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 # Resume model

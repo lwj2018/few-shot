@@ -63,8 +63,6 @@ val_sampler = CategoriesSampler_val_100way(valset.label, 100,
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                         num_workers=num_workers, pin_memory=True)
 model_cnn = gcrConvnet().to(device)
-model = GCR(model_cnn,train_way=args.train_way,test_way=args.test_way,\
-    shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 # Resume model
 if cnn_ckpt is not None:
@@ -77,6 +75,8 @@ global_proto = torch.load(global_ckpt)
 global_proto = global_proto[:args.num_class,:]
 global_base = torch.Tensor(global_proto[:args.n_base,:]).to(device)
 global_novel = torch.Tensor(global_proto[args.n_base:,:]).to(device)
+model = GCR(model_cnn,global_base=global_base,global_novel=global_novel,train_way=args.train_way,test_way=args.test_way,\
+    shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 global_base.requires_grad = True
 global_novel.requires_grad = True
@@ -108,7 +108,6 @@ for epoch in range(start_epoch, epochs):
         'best': best_acc,
         'global_proto': torch.cat([model.global_base,model.global_novel])
     }, is_best, model_path, store_name)
-    save_checkpoint(torch.cat([global_base,global_novel],0),is_best,model_path,gproto_name)
     print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
 print("Training Finished".center(60, '#'))

@@ -108,13 +108,13 @@ def eval(model, criterion,
         recoder.update(vals)
 
         if i % log_interval == log_interval-1:
-            recoder.log(epoch,i,len(valloader))
+            recoder.log(epoch,i,len(valloader),mode='Eval')
 
     return recoder.get_avg('val acc1')
 
 def test_100way(model, criterion,
           valloader, device, epoch, 
-          log_interval, writer, args):
+          log_interval, writer, args, relation):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     avg_loss = AverageMeter()
@@ -139,8 +139,8 @@ def test_100way(model, criterion,
         data_shot = data[:,3:,:]
         proto = model.baseModel(data_shot)
         global_set = torch.cat([model.global_base,model.global_novel])
-        logits = model.relation1(proto,global_set)
-
+        logits = relation(proto,global_set)
+        
         # compute the loss
         loss = criterion(logits, lab)
 
@@ -157,6 +157,6 @@ def test_100way(model, criterion,
         recoder.update(vals)
 
         if i % log_interval == log_interval-1:
-            recoder.log(epoch,i,len(valloader))
+            recoder.log(epoch,i,len(valloader),mode='Test')
 
     return recoder.get_avg('val acc')
