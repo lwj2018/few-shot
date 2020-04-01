@@ -10,9 +10,9 @@ from datasets.samplers import CategoriesSampler_train_100way, CategoriesSampler_
 from models.GCR_relation import GCR_relation
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
-from utils.critUtils import loss_for_gcr
-from utils.trainUtils import train
-from utils.testUtils import eval
+from utils.critUtils import loss_for_gcr, loss_for_gcr_relation
+from utils.trainUtils import train, train_gcr_relation
+from utils.testUtils import eval, eval_gcr_relation
 from torch.utils.tensorboard import SummaryWriter
 
 class Arguments:
@@ -26,7 +26,7 @@ class Arguments:
         self.test_way = 5
         self.feature_dim = 1600
 # Hyper params 
-epochs = 500
+epochs = 1000
 learning_rate = 1e-3
 # Options
 store_name = 'miniImage_GCR_r'
@@ -37,7 +37,7 @@ global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto
 # checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_GCR_r_checkpoint.pth.tar'
 checkpoint = None
 log_interval = 20
-device_list = '2'
+device_list = '0'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -85,7 +85,7 @@ model = GCR_relation(model_cnn,global_base=global_base,global_novel=global_novel
     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 # Create loss criterion & optimizer
-criterion = loss_for_gcr()
+criterion = loss_for_gcr_relation()
 
 policies = model.get_optim_policies(learning_rate)
 optimizer = torch.optim.SGD(policies, momentum=0.9)
@@ -99,9 +99,11 @@ print("Train with global proto integrated, Save global")
 print("Training Started".center(60, '#'))
 for epoch in range(start_epoch, epochs):
     # Train the model
-    train(model,criterion,optimizer,optimizer_cnn,train_loader,device,epoch,log_interval,writer,args)
+    train_gcr_relation(model,criterion,optimizer,optimizer_cnn,train_loader,device,epoch,log_interval,writer,args)
     # Eval the model
-    acc = eval(model,criterion,val_loader,device,epoch,log_interval,writer,args)
+    acc = eval_gcr_relation(model,criterion,val_loader,device,epoch,log_interval,writer,args)
+    lr_scheduler.step()
+    lr_scheduler_cnn.step()
     # Save model
     # remember best acc and save checkpoint
     is_best = acc>best_acc

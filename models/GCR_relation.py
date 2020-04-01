@@ -69,11 +69,9 @@ class GCR_relation(nn.Module):
         global_new, proto_new = self.registrator(support_set=torch.cat([self.global_base,self.global_novel]), query_set=proto_final)
         # shape of the dist_metric is: way x total_class
         logits2 = self.relation2(proto_new, global_new)
-        # gt = convert_to_onehot(gt,global_new.size(0))
 
-        # logits2 = logits2.log()
-        # similarity = F.softmax(logits2)
-        similarity = logits2
+        similarity = F.normalize(logits2,1,-1)
+        # similarity = logits2
         feature = torch.matmul(similarity, torch.cat([self.global_base,self.global_novel]))
         # shape of data_query is: (query x way) x ...
         # shape of feature is: way x f_dim(1600)
@@ -81,9 +79,11 @@ class GCR_relation(nn.Module):
         logits = self.relation1(self.baseModel(data_query),feature)
         label = torch.arange(way).repeat(query)
         label = label.type(torch.cuda.LongTensor)
-        # label = convert_to_onehot(label,way)
 
-        return logits, label, logits2, gt
+        gt3 = gt.repeat(self.shot)
+        logits3 = self.relation1(proto.reshape(self.shot*way,-1),torch.cat([self.global_base,self.global_novel]))
+
+        return logits, label, logits2, gt, logits3, gt3
 
     def get_optim_policies(self,lr):
         return [
