@@ -11,8 +11,8 @@ from models.GCR import GCR
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
 from utils.critUtils import loss_for_gcr
-from utils.trainUtils import train
-from utils.testUtils import eval
+from utils.trainUtils import train_gcr
+from utils.testUtils import eval_gcr
 from torch.utils.tensorboard import SummaryWriter
 
 class Arguments:
@@ -70,7 +70,7 @@ if cnn_ckpt is not None:
 if reg_ckpt is not None:
     resume_model(model_reg,reg_ckpt)
 if checkpoint is not None:
-    start_epoch, best_acc = resume_model(model, checkpoint)
+    start_epoch, best_acc = resume_gcr_model(model, checkpoint, args.n_base)
 global_proto = torch.load(global_ckpt)
 global_proto = global_proto[:args.num_class,:]
 global_base = torch.Tensor(global_proto[:args.n_base,:]).to(device)

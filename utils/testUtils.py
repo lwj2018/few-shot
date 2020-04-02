@@ -57,7 +57,7 @@ def eval_cnn(model, criterion, valloader,
         
     return recoder.get_avg('val acc')
 
-def eval(model, criterion,
+def eval_gcr(model, criterion,
           valloader, device, epoch, 
           log_interval, writer, args):
     batch_time = AverageMeter()
@@ -173,8 +173,8 @@ def eval_gcr_relation(model, criterion,
     avg_acc2 = AverageMeter()
     avg_acc3 = AverageMeter()
     # Create recorder
-    averagers = [avg_loss1, avg_loss2, avg_acc1, avg_acc2, avg_acc3]
-    names = ['val loss1','val loss2','val acc1','val acc2','val acc3']
+    averagers = [avg_loss1, avg_loss2, avg_loss3, avg_acc1, avg_acc2, avg_acc3]
+    names = ['val loss1','val loss2','val loss3', 'val acc1','val acc2','val acc3']
     recoder = Recorder(averagers,names,writer,batch_time,data_time)
     # Set evaluation mode
     model.eval()
@@ -218,3 +218,57 @@ def eval_gcr_relation(model, criterion,
             recoder.log(epoch,i,len(valloader),mode='Eval')
 
     return recoder.get_avg('val acc1')
+
+def eval_mn_pn(model, criterion,
+          valloader, device, epoch, 
+          log_interval, writer, args):
+    batch_time = AverageMeter()
+    data_time = AverageMeter()
+    avg_loss = AverageMeter()
+    avg_acc = AverageMeter()
+    # Create recorder
+    averagers = [avg_loss,avg_acc]
+    names = ['val loss','val acc']
+    recoder = Recorder(averagers,names,writer,batch_time,data_time)
+    # Set evaluation mode
+    model.eval()
+
+    recoder.tik()
+    recoder.data_tik()
+    for i, batch in enumerate(valloader):
+        # measure data loading time
+        recoder.data_tok()
+
+        # get the inputs and labels
+        data, lab = [_.to(device) for _ in batch]
+
+        # forward
+        data = data.view( ((args.shot+args.query_val),args.test_way) + data.size()[-3:] )
+        data = data.permute(1,0,2,3,4).contiguous()
+        data = data.view( (-1,) + data.size()[-3:] )
+        p = args.shot * args.test_way
+        data_shot = data[:p]
+        data_query = data[p:]
+        data_shot = data_shot[:,3:,:]
+        data_query = data_query[:,3:,:]
+
+        y_pred, label = model(data_shot,data_query,mode='eval')
+        # compute the loss
+        loss = criterion(y_pred, label)
+
+        # compute the metrics
+        acc = accuracy(y_pred, label)[0]
+
+        # measure elapsed time
+        recoder.tok()
+        recoder.tik()
+        recoder.data_tik()
+
+        # update average value
+        vals = [loss.item(),acc]
+        recoder.update(vals)
+
+        if i % log_interval == log_interval-1:
+            recoder.log(epoch,i,len(valloader),mode='Eval')
+
+    return recoder.get_avg('val acc')
