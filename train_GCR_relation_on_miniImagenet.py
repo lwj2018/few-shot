@@ -18,24 +18,25 @@ from torch.utils.tensorboard import SummaryWriter
 class Arguments:
     def __init__(self):
         self.num_class = 100
-        self.shot = 5
-        self.query = 5
-        self.query_val = 15
+        self.shot = 1
+        self.query = 1
+        self.query_val = 5
         self.n_base = 80
         self.train_way = 20
         self.test_way = 5
         self.feature_dim = 1600
+# Get args
+args = Arguments()
 # Hyper params 
 epochs = 2000
 learning_rate = 1e-3
 # Options
-store_name = 'miniImage_GCR_r'
+store_name = 'miniImage_GCR_r' + '_%dshot'%(args.shot)
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 reg_ckpt = None
 global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
-# global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/miniImage_gcr_gproto_r_checkpoint.pth.tar'
+checkpoint = None
 # checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_GCR_r_checkpoint.pth.tar'
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_GCR_r_checkpoint.pth.tar'
 log_interval = 20
 device_list = '1'
 num_workers = 8
@@ -43,8 +44,6 @@ model_path = "./checkpoint"
 
 start_epoch = 0
 best_acc = 0.00
-# Get args
-args = Arguments()
 # Use specific gpus
 os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 # Device setting
@@ -65,8 +64,6 @@ val_sampler = CategoriesSampler_val_100way(valset.label, 100,
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                         num_workers=num_workers, pin_memory=True)
 model_cnn = gcrConvnet().to(device)
-model = GCR_relation(model_cnn,train_way=args.train_way,\
-    test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 # Resume model
 if cnn_ckpt is not None:
@@ -82,6 +79,8 @@ global_base = global_proto[:args.n_base,:]
 global_base = global_base.detach().cuda()
 global_novel = global_proto[args.n_base:,:]
 global_novel = global_novel.detach().cuda()
+model = GCR_relation(model_cnn,global_base=global_base,global_novel=global_novel,train_way=args.train_way,\
+    test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 
 # Create loss criterion & optimizer

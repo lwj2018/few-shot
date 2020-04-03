@@ -157,11 +157,15 @@ class CategoriesSampler_train_100way():
                 else:
                     # 如果c属于c_novel，只取前n_shot个样本用于训练，然后做数据增强
                     l = self.m_ind[c]
-                    tmp = torch.randperm(self.n_shot)
-                    novel_query = torch.randperm(self.n_shot-1)[0]+1
-                    a = tmp[:self.n_shot-novel_query]
-                    b = tmp[self.n_shot-novel_query:]
-                    batch.append(torch.cat((l[a.repeat(15)[:self.n_shot]],l[b.repeat(15)[:self.n_query]])))
+                    if self.n_shot>1:
+                        tmp = torch.randperm(self.n_shot)
+                        novel_query = torch.randperm(self.n_shot-1)[0]+1
+                        a = tmp[:self.n_shot-novel_query]
+                        b = tmp[self.n_shot-novel_query:]
+                        batch.append(torch.cat((l[a.repeat(15)[:self.n_shot]],l[b.repeat(15)[:self.n_query]])))
+                    else:
+                        ind = l[0].view(-1)
+                        batch.append(torch.cat([ind,ind]))
 
             batch = torch.stack(batch).t().reshape(-1)
             yield batch
@@ -195,7 +199,7 @@ class CategoriesSampler_val_100way():
                 #pos = torch.cat([torch.Tensor(range(0,self.n_shot)).type(torch.LongTensor), self.n_shot+torch.randperm(len(l)-self.n_shot)[:self.n_query]])
                 # 利用训练时未使用过的最后100个样本
                 # shot+query_val = 5+15 = 20
-                tmp = torch.randperm(100)[:20]+500
+                tmp = torch.randperm(100)[:self.n_shot+self.n_query]+500
                 batch.append(l[tmp])
             batch = torch.stack(batch).t().reshape(-1)
             yield batch

@@ -10,8 +10,8 @@ from datasets.samplers import CategoriesSampler_train_100way, CategoriesSampler_
 from models.GCR_relation import GCR_relation
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
-from utils.critUtils import loss_for_gcr
-from utils.testUtils import eval
+from utils.critUtils import loss_for_gcr_relation
+from utils.testUtils import eval_gcr_relation
 from torch.utils.tensorboard import SummaryWriter
 
 class Arguments:
@@ -28,7 +28,7 @@ class Arguments:
 epochs = 1000
 learning_rate = 1e-3
 # Options
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200401miniImage_GCR_r_best.pth.tar'
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'
 log_interval = 20
 device_list = '2'
 num_workers = 8
@@ -62,12 +62,12 @@ if checkpoint is not None:
 
 
 # Create loss criterion
-criterion = loss_for_gcr()
+criterion = loss_for_gcr_relation()
 
 # Start Evaluation
 print("Evaluation Started".center(60, '#'))
 for epoch in range(start_epoch, start_epoch+1):
-    acc = eval(model,criterion,val_loader,device,epoch,log_interval,writer,args)
-    print('Batch acc on miniImagenet: {}'.format(acc))
+    acc = eval_gcr_relation(model,criterion,val_loader,device,epoch,log_interval,writer,args)
+    print('Batch acc on miniImagenet: {:.3f}'.format(acc))
 
 print("Evaluation Finished".center(60, '#'))

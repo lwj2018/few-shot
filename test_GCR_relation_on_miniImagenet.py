@@ -29,9 +29,9 @@ class Arguments:
 epochs = 1000
 learning_rate = 1e-3
 # Options
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200401miniImage_GCR_r_best.pth.tar'
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'
 log_interval = 20
-device_list = '1'
+device_list = '2'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -75,7 +75,7 @@ for epoch in range(start_epoch, start_epoch+1):
     print('Batch accu_a on miniImagenet: {:.3f}'.format(acc))
     acc = test_100way(model,criterion,val_loader2,device,epoch,log_interval,writer,args,model.relation1)
     print('Batch accu_b on miniImagenet: {:.3f}'.format(acc))
-    acc = test_100way(model,criterion,val_loader3,device,epoch,log_interval,writer,args,model.relation1)
+    acc = test_100way(model,criterion,val_loader3,device,epoch,log_interval,writer,args,model.relation1,'test')
     print('Batch accu_n on miniImagenet: {:.3f}'.format(acc))
 
 print("Test Finished".center(60, '#'))

@@ -33,7 +33,7 @@ store_name = 'miniImage_PN'
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 checkpoint = None
 log_interval = 20
-device_list = '1'
+device_list = '2'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -50,7 +50,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = SummaryWriter(os.path.join('runs/miniImage_pn', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
 # Prepare dataset & dataloader
-trainset = MiniImageNet('trainvaltest')
+trainset = MiniImageNet('trainval')
 train_sampler = CategoriesSampler_train_100way(trainset.label, 100,
                         args.train_way, args.shot, args.query, args.n_base)
 train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler,
