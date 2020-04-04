@@ -39,19 +39,22 @@ class GCR(nn.Module):
             if which_base < way:
                 proto_base = proto[:,:which_base,:]
                 proto_novel = proto[:,which_base:,:]
-                # Synthesis module corresponds to section 3.2 of the thesis
-                # Temporarily do not use Hallucinator
-                ind_gen = torch.randperm(self.shot)
-                train_num = np.random.randint(1,self.shot)
-                proto_novel_f = proto_novel[ind_gen[:train_num],:,:]
-                weight_arr = np.random.rand(train_num)
-                weight_arr = weight_arr/np.sum(weight_arr)
-                # Generate a new sample
-                # shape of proto_novel_f is: shot x novel_class x feature_dim
-                proto_novel_f = (torch.from_numpy(weight_arr.reshape(-1,1,1)).type(torch.float).cuda()*proto_novel_f).sum(dim=0)
                 proto_base = proto_base.mean(dim=0)
-                # Corresponds to episodic repesentations in the thesis
-                # After sum or mean, shape of protos are: class x feature_dim
+                if self.shot>1:
+                    # Synthesis module corresponds to section 3.2 of the thesis
+                    # Temporarily do not use Hallucinator
+                    ind_gen = torch.randperm(self.shot)
+                    train_num = np.random.randint(1,self.shot)
+                    proto_novel_f = proto_novel[ind_gen[:train_num],:,:]
+                    weight_arr = np.random.rand(train_num)
+                    weight_arr = weight_arr/np.sum(weight_arr)
+                    # Generate a new sample
+                    # shape of proto_novel_f is: shot x novel_class x f_dim(1600)
+                    proto_novel_f = (torch.from_numpy(weight_arr.reshape(-1,1,1)).type(torch.float).cuda()*proto_novel_f).sum(dim=0)
+                    # Corresponds to episodic repesentations in the thesis
+                    # After sum or mean, shape of protos are: class x f_dim(1600)
+                else:
+                    proto_novel_f = proto_novel.mean(dim=0)
                 proto_final = torch.cat([proto_base, proto_novel_f],0)
             else:
                 proto_final = proto.reshape(self.shot,way,-1).mean(dim=0)

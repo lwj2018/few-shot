@@ -11,15 +11,22 @@ from models.GCR import GCR
 from models.convnet import gcrConvnet
 from utils.ioUtils import *
 from utils.critUtils import loss_for_gcr
-from utils.testUtils import eval
+from utils.testUtils import eval_gcr
 from torch.utils.tensorboard import SummaryWriter
 
 class Arguments:
     def __init__(self):
         self.num_class = 100
-        self.shot = 5
-        self.query = 5
-        self.query_val = 15
+        
+        # Settings for 5-shot
+        # self.shot = 5
+        # self.query = 5
+        # self.query_val = 15
+        # Settings for 1-shot
+        self.shot = 1
+        self.query = 1
+        self.query_val = 5
+        
         self.n_base = 80
         self.train_way = 20
         self.test_way = 5
@@ -28,7 +35,8 @@ class Arguments:
 epochs = 1000
 learning_rate = 1e-3
 # Options
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200401_miniImage_GCR_best.pth.tar'
+# checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200401_miniImage_GCR_best.pth.tar'#5-shot
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200404_miniImage_GCR_1shot_best.pth.tar'#1-shot
 log_interval = 20
 device_list = '1'
 num_workers = 8
@@ -67,7 +75,7 @@ criterion = loss_for_gcr()
 # Start Evaluation
 print("Evaluation Started".center(60, '#'))
 for epoch in range(start_epoch, start_epoch+1):
-    acc = eval(model,criterion,val_loader,device,epoch,log_interval,writer,args)
-    print('Batch acc on miniImagenet: {}'.format(acc))
+    acc = eval_gcr(model,criterion,val_loader,device,epoch,log_interval,writer,args)
+    print('Batch acc on miniImagenet: {:.3f}'.format(acc))
 
 print("Evaluation Finished".center(60, '#'))

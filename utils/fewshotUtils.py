@@ -3,7 +3,7 @@ def create_nshot_task_label(k: int, q: int) -> torch.Tensor:
     """Creates an n-shot task label.
 
     Label has the structure:
-        [0]*q + [1]*q + ... + [k-1]*q
+        [0,1,2,..,k-1]*q
 
     # TODO: Test this
 
@@ -14,5 +14,5 @@ def create_nshot_task_label(k: int, q: int) -> torch.Tensor:
     # Returns
         y: Label vector for n-shot task of shape [q * k, ]
     """
-    y = torch.arange(0, k, 1 / q).long()
+    y = torch.arange(k).repeat(q).long()
     return y

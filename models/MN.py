@@ -63,7 +63,7 @@ class MN(nn.Module):
         distances = euclidean_metric(queries, support)
 
         # Calculate "attention" as softmax over support-query distances
-        attention = (-distances).softmax(dim=1)
+        attention = (distances).softmax(dim=1)
 
         # Calculate predictions as in equation (1) from Matching Networks
         # y_hat = \sum_{i=1}^{k} a(x_hat, x_i) y_i

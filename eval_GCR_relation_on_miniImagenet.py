@@ -17,9 +17,16 @@ from torch.utils.tensorboard import SummaryWriter
 class Arguments:
     def __init__(self):
         self.num_class = 100
-        self.shot = 5
-        self.query = 5
-        self.query_val = 15
+
+        # Settings for 5-shot
+        # self.shot = 5
+        # self.query = 5
+        # self.query_val = 15
+        # Settings for 1-shot
+        self.shot = 1
+        self.query = 1
+        self.query_val = 5
+        
         self.n_base = 80
         self.train_way = 20
         self.test_way = 5
@@ -28,7 +35,8 @@ class Arguments:
 epochs = 1000
 learning_rate = 1e-3
 # Options
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'
+# checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'#5-shot
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200404_miniImage_GCR_r_1shot_best.pth.tar'#1-shot
 log_interval = 20
 device_list = '2'
 num_workers = 8

@@ -45,7 +45,7 @@ class PN(nn.Module):
         distances = euclidean_metric(queries,prototypes)
 
         # Calculate log p_{phi} (y = k | x)
-        y_pred = (-distances).log_softmax(dim=1)
+        y_pred = (distances).log_softmax(dim=1)
         label = create_nshot_task_label(way,query).cuda()
         return y_pred, label
 
@@ -66,5 +66,5 @@ def compute_prototypes(support: torch.Tensor, k: int, n: int) -> torch.Tensor:
     """
     # Reshape so the first dimension indexes by class then take the mean
     # along that dimension to generate the "prototypes" for each class
-    class_prototypes = support.reshape(k, n, -1).mean(dim=1)
+    class_prototypes = support.reshape(n, k, -1).mean(dim=0)
     return class_prototypes

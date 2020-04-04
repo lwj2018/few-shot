@@ -29,7 +29,8 @@ class Arguments:
 epochs = 1000
 learning_rate = 1e-3
 # Options
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'
+# checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'#5-shot
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200404_miniImage_GCR_r_1shot_best.pth.tar'#1-shot
 log_interval = 20
 device_list = '2'
 num_workers = 8

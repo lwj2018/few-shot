@@ -33,7 +33,7 @@ store_name = 'miniImage_PN'
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 checkpoint = None
 log_interval = 20
-device_list = '2'
+device_list = '1'
 num_workers = 8
 model_path = "./checkpoint"
 
