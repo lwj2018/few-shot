@@ -8,7 +8,7 @@ from torchvision import transforms
 image_root = '/home/liweijie/Data/omniglot/python'
 csv_root = '/home/liweijie/projects/few-shot/csv/omniglot'
 
-class MiniImageNet(Dataset):
+class Omniglot(Dataset):
 
     def __init__(self, setname):
         csv_path = osp.join(csv_root, setname + '.csv')
@@ -62,7 +62,7 @@ class MiniImageNet(Dataset):
 
 # Test
 if __name__ == '__main__':
-    dataset = MiniImageNet('trainvaltest')
+    dataset = Omniglot('trainvaltest')
     # Check every file in the dataset
     for i in range(len(dataset)):
         dataset[i]
