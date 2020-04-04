@@ -246,9 +246,6 @@ def eval_mn_pn(model, criterion,
         data, lab = [_.to(device) for _ in batch]
 
         # forward
-        data = data.view( ((args.shot+args.query_val),args.test_way) + data.size()[-3:] )
-        data = data.permute(1,0,2,3,4).contiguous()
-        data = data.view( (-1,) + data.size()[-3:] )
         p = args.shot * args.test_way
         data_shot = data[:p]
         data_query = data[p:]

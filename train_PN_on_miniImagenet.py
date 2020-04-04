@@ -31,7 +31,7 @@ learning_rate = 1e-4
 # Options
 store_name = 'miniImage_PN'
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
-checkpoint = None
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_PN_checkpoint.pth.tar'
 log_interval = 20
 device_list = '1'
 num_workers = 8
@@ -55,7 +55,7 @@ train_sampler = CategoriesSampler_train_100way(trainset.label, 100,
                         args.train_way, args.shot, args.query, args.n_base)
 train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler,
                         num_workers=num_workers, pin_memory=True)
-valset = MiniImageNet('trainvaltest')
+valset = MiniImageNet('test')
 val_sampler = CategoriesSampler_val_100way(valset.label, 100,
                         args.test_way, args.shot, args.query_val)
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
@@ -74,6 +74,7 @@ if checkpoint is not None:
 criterion = nn.CrossEntropyLoss()
 
 policies = model.get_optim_policies(learning_rate)
+# optimizer = torch.optim.SGD(policies, momentum=0.9)
 optimizer = torch.optim.SGD(policies, momentum=0.9)
 
 lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30,60], gamma=0.1)
