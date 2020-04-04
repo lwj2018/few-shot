@@ -63,9 +63,17 @@ class CategoriesSampler_train():
                     batch.append(l[tmp[:self.n_shot+self.n_query]])
 
                 else:
+                    # 如果c属于c_novel，只取前n_shot个样本用于训练，然后做数据增强
                     l = self.m_ind[c]
-                    tmp = torch.randperm(self.n_shot)
-                    batch.append(torch.cat((l[tmp],torch.zeros(self.n_query).type(torch.LongTensor))))
+                    if self.n_shot>1:
+                        tmp = torch.randperm(self.n_shot)
+                        novel_query = torch.randperm(self.n_shot-1)[0]+1
+                        a = tmp[:self.n_shot-novel_query]
+                        b = tmp[self.n_shot-novel_query:]
+                        batch.append(torch.cat((l[a.repeat(15)[:self.n_shot]],l[b.repeat(15)[:self.n_query]])))
+                    else:
+                        ind = l[0].view(-1)
+                        batch.append(torch.cat([ind,ind]))
 
             # shape of batch is (n_shot+n_query) x train_way
             batch = torch.stack(batch).t().reshape(-1)
@@ -170,7 +178,7 @@ class CategoriesSampler_train_100way():
             yield batch
 
 class CategoriesSampler_train_mn():
-
+    # Sample data in MN format
     def __init__(self, label, n_batch, n_cls, n_shot,n_query, n_base_class):
         self.n_batch = n_batch
         self.n_cls = n_cls
@@ -212,7 +220,7 @@ class CategoriesSampler_train_mn():
             yield batch
 
 class CategoriesSampler_val_100way():
-
+    # Sample data in MN format
     def __init__(self, label, n_batch, n_cls, n_shot,n_query):
         self.n_batch = n_batch
         self.n_cls = n_cls
