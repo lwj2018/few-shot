@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from utils.metricUtils import euclidean_metric
-from utils.fewshotUtils import create_nshot_task_label
+from utils.fewshotUtils import create_nshot_task_label,create_nshot_task_label_t
 
 class MN(nn.Module):
     def __init__(self,baseModel,
@@ -68,7 +68,7 @@ class MN(nn.Module):
         # Calculate predictions as in equation (1) from Matching Networks
         # y_hat = \sum_{i=1}^{k} a(x_hat, x_i) y_i
         y_pred = matching_net_predictions(attention, self.shot, way, query)
-        label = create_nshot_task_label(way,query).cuda()
+        label = create_nshot_task_label_t(way,query).cuda()
         return y_pred, label
 
     def get_optim_policies(self, lr):

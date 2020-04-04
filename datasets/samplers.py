@@ -116,7 +116,6 @@ class CategoriesSampler_train_repeat():
             batch = torch.stack(batch).t().reshape(-1)
             yield batch
 
-# generalized FSL设置时的train_sampler
 class CategoriesSampler_train_100way():
 
     def __init__(self, label, n_batch, n_cls, n_shot,n_query, n_base_class):
@@ -170,7 +169,48 @@ class CategoriesSampler_train_100way():
             batch = torch.stack(batch).t().reshape(-1)
             yield batch
 
-# generalized FSL设置时的val_sampler
+class CategoriesSampler_train_mn():
+
+    def __init__(self, label, n_batch, n_cls, n_shot,n_query, n_base_class):
+        self.n_batch = n_batch
+        self.n_cls = n_cls
+        self.n_shot = n_shot
+        self.n_query = n_query
+        self.n_base_class = n_base_class
+
+        label = np.array(label)
+        self.m_ind = []
+        # build the mapping dict: label -> samples belong to this label
+        for i in range(max(label) + 1):
+            ind = np.argwhere(label == i).reshape(-1)
+            ind = torch.from_numpy(ind)
+            self.m_ind.append(ind)
+
+    def __len__(self):
+        return self.n_batch
+
+    def __iter__(self):
+        for i_batch in range(self.n_batch):
+            batch = []
+            query_batch = []
+            shot_batch = []
+            # 随机选出n_cls个类
+            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            # 排序以保证基类在前，新类在后
+            classes,order =classes.sort()
+
+            for c in classes:
+                l = self.m_ind[c]
+                tmp = torch.randperm(len(l)-100)
+                batch.append(l[tmp[:self.n_shot+self.n_query]])
+
+            batch = torch.stack(batch)
+            data_shot = batch[:,:self.n_shot]
+            data_query = batch[:,self.n_shot:]
+            batch = torch.cat([data_shot.reshape(-1),data_query.reshape(-1)])
+
+            yield batch
+
 class CategoriesSampler_val_100way():
 
     def __init__(self, label, n_batch, n_cls, n_shot,n_query):
@@ -204,9 +244,43 @@ class CategoriesSampler_val_100way():
             batch = torch.stack(batch).t().reshape(-1)
             yield batch
 
+class CategoriesSampler_val_mn():
 
+    def __init__(self, label, n_batch, n_cls, n_shot,n_query):
+        self.n_batch = n_batch
+        self.n_cls = n_cls
+        self.n_shot = n_shot
+        self.n_query = n_query
 
-# standard FSL设置时的val sampler
+        label = np.array(label)
+        self.m_ind = []
+        for i in range(max(label) + 1):
+            ind = np.argwhere(label == i).reshape(-1)
+            ind = torch.from_numpy(ind)
+            self.m_ind.append(ind)
+
+    def __len__(self):
+        return self.n_batch
+
+    def __iter__(self):
+        for i_batch in range(self.n_batch):
+            batch = []
+            # 随机选出n_cls个类
+            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            for c in classes:
+                l = self.m_ind[c]
+                #pos = torch.cat([torch.Tensor(range(0,self.n_shot)).type(torch.LongTensor), self.n_shot+torch.randperm(len(l)-self.n_shot)[:self.n_query]])
+                # 利用训练时未使用过的最后100个样本
+                # shot+query_val = 5+15 = 20
+                tmp = torch.randperm(100)[:self.n_shot+self.n_query]+500
+                batch.append(l[tmp])
+            # Rearrange the data as the input format of MN
+            batch = torch.stack(batch)
+            data_shot = batch[:,:self.n_shot]
+            data_query = batch[:,self.n_shot:]
+            batch = torch.cat([data_shot.reshape(-1),data_query.reshape(-1)])
+            yield batch
+
 class CategoriesSampler_val():
 
     def __init__(self, label, n_batch, n_cls, n_shot,n_query):

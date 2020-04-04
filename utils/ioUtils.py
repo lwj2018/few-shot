@@ -29,6 +29,7 @@ def resume_gcr_model(model, checkpoint, n_base):
     params_dict = torch.load(checkpoint)
     state_dict = params_dict['state_dict']
     model.load_state_dict(state_dict)
+    # resume global proto
     model.global_base = params_dict['global_proto'][:n_base,:]
     model.global_novel = params_dict['global_proto'][n_base:,:]
 
@@ -51,3 +52,21 @@ def resume_cnn_part(model, checkpoint):
     print("Load part of CNN from {}: \n"
     "Epoch: {}\n"
     "Best: {:.3f}%".format(checkpoint,epoch,best))
+
+def resume_gcr_part(model, checkpoint, n_base):
+    model_dict = model.state_dict()
+    params_dict = torch.load(checkpoint)
+    state_dict = params_dict['state_dict']
+    state_dict = {k : v for k,v in state_dict.items()}
+    model_dict.update(state_dict)
+    model.load_state_dict(model_dict)
+    # resume global proto 
+    model.global_base = params_dict['global_proto'][:n_base,:]
+    model.global_novel = params_dict['global_proto'][n_base:,:]
+
+    epoch = params_dict['epoch']
+    best = params_dict['best']
+    print("Load GCR part from {}: \n"
+    "Epoch: {}\n"
+    "Best: {:.3f}%".format(checkpoint,epoch,best))
+    return model
