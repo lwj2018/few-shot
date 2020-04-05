@@ -31,7 +31,7 @@ class CategoriesSampler():
 
 
 class CategoriesSampler_train():
-
+    # Normal sampler, suit for omniglot
     def __init__(self, label, n_batch, n_cls, n_shot,n_query, n_base_class):
         self.n_batch = n_batch
         self.n_cls = n_cls
@@ -290,7 +290,7 @@ class CategoriesSampler_val_mn():
             yield batch
 
 class CategoriesSampler_val():
-
+    # Normal sampler, suit for omniglot
     def __init__(self, label, n_batch, n_cls, n_shot,n_query):
         self.n_batch = n_batch
         self.n_cls = n_cls
