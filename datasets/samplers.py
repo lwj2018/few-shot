@@ -208,9 +208,22 @@ class CategoriesSampler_train_mn():
             classes,order =classes.sort()
 
             for c in classes:
-                l = self.m_ind[c]
-                tmp = torch.randperm(len(l)-100)
-                batch.append(l[tmp[:self.n_shot+self.n_query]])
+                if c < self.n_base_class:
+                    l = self.m_ind[c]
+                    tmp = torch.randperm(len(l))
+                    batch.append(l[tmp[:self.n_shot+self.n_query]])
+                else:
+                    # 如果c属于c_novel，只取前n_shot个样本用于训练，然后做数据增强
+                    l = self.m_ind[c]
+                    if self.n_shot>1:
+                        tmp = torch.randperm(self.n_shot)
+                        novel_query = torch.randperm(self.n_shot-1)[0]+1
+                        a = tmp[:self.n_shot-novel_query]
+                        b = tmp[self.n_shot-novel_query:]
+                        batch.append(torch.cat((l[a.repeat(15)[:self.n_shot]],l[b.repeat(15)[:self.n_query]])))
+                    else:
+                        ind = l[0].view(-1)
+                        batch.append(torch.cat([ind,ind]))
 
             batch = torch.stack(batch)
             data_shot = batch[:,:self.n_shot]
@@ -277,11 +290,9 @@ class CategoriesSampler_val_mn():
             classes = torch.randperm(len(self.m_ind))[:self.n_cls]
             for c in classes:
                 l = self.m_ind[c]
-                #pos = torch.cat([torch.Tensor(range(0,self.n_shot)).type(torch.LongTensor), self.n_shot+torch.randperm(len(l)-self.n_shot)[:self.n_query]])
-                # 利用训练时未使用过的最后100个样本
-                # shot+query_val = 5+15 = 20
-                tmp = torch.randperm(100)[:self.n_shot+self.n_query]+500
-                batch.append(l[tmp])
+                # 前n_shot个样本作为支撑集，之后的样本中取n_query个作为query set
+                pos = torch.cat([torch.Tensor(range(0,self.n_shot)).type(torch.LongTensor),self.n_shot+torch.randperm(len(l)-self.n_shot)[:self.n_query]])
+                batch.append(l[pos])
             # Rearrange the data as the input format of MN
             batch = torch.stack(batch)
             data_shot = batch[:,:self.n_shot]

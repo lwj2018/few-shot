@@ -21,9 +21,8 @@ learning_rate = 1e-4
 # Options
 shot = 5
 dataset = 'omniglot'
-args = Arguments(shot,dataset)
-store_name = dataset + '_GCR_ri' + '_%dshot'%(args.shot)
-summary_name = 'runs/' + dataset + '_gcr_ri'
+store_name = dataset + '_GCR_ri' + '_%dshot'%(shot)
+summary_name = 'runs/' + store_name
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 reg_ckpt = None
 global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
@@ -35,6 +34,8 @@ model_path = "./checkpoint"
 
 start_epoch = 0
 best_acc = 0.00
+# Get args
+args = Arguments(shot,dataset)
 # Use specific gpus
 os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 # Device setting
@@ -45,8 +46,8 @@ writer = SummaryWriter(os.path.join(summary_name, time.strftime('%Y-%m-%d %H:%M:
 
 # Prepare dataset & dataloader
 train_loader, val_loader = getDataloader(dataset,args)
-model_cnn = gcrConvnet().to(device)
 
+model_cnn = gcrConvnet().to(device)
 model = GCR_ri(model_cnn,train_way=args.train_way,\
     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 # Resume model

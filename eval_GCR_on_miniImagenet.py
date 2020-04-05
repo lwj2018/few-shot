@@ -13,28 +13,17 @@ from utils.ioUtils import *
 from utils.critUtils import loss_for_gcr
 from utils.testUtils import eval_gcr
 from torch.utils.tensorboard import SummaryWriter
+from utils.dataUtils import getValloader
+from Arguments import Arguments
 
-class Arguments:
-    def __init__(self):
-        self.num_class = 100
-        
-        # Settings for 5-shot
-        # self.shot = 5
-        # self.query = 5
-        # self.query_val = 15
-        # Settings for 1-shot
-        self.shot = 1
-        self.query = 1
-        self.query_val = 5
-        
-        self.n_base = 80
-        self.train_way = 20
-        self.test_way = 5
-        self.feature_dim = 1600
 # Hyper params 
 epochs = 1000
 learning_rate = 1e-3
 # Options
+dataset = 'miniImage'
+shot = 5
+store_name = 'eval' + dataset + '_GCR' + '_%dshot'%(shot)
+summary_name = 'runs/' + store_name
 # checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200401_miniImage_GCR_best.pth.tar'#5-shot
 checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200404_miniImage_GCR_1shot_best.pth.tar'#1-shot
 log_interval = 20
@@ -45,21 +34,17 @@ model_path = "./checkpoint"
 start_epoch = 0
 best_acc = 0.00
 # Get args
-args = Arguments()
+args = Arguments(shot,dataset)
 # Use specific gpus
 os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Use writer to record
-writer = SummaryWriter(os.path.join('runs/eval_miniImage_gcr', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
+writer = SummaryWriter(os.path.join(summary_name, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
 # Prepare dataset & dataloader
-valset = MiniImageNet('test')
-val_sampler = CategoriesSampler_val_100way(valset.label, 600,
-                        args.test_way, args.shot, args.query_val)
-val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
-                        num_workers=num_workers, pin_memory=True)
+val_loader = getValloader(dataset,args)
 model_cnn = gcrConvnet().to(device)
 model = GCR(model_cnn,train_way=args.train_way,\
     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)

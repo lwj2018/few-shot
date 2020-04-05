@@ -14,22 +14,17 @@ from utils.ioUtils import *
 from utils.trainUtils import train_mn_pn
 from utils.testUtils import eval_mn_pn
 from torch.utils.tensorboard import SummaryWriter
+from utils.dataUtils import getDataloader
+from Arguments import Arguments
 
-class Arguments:
-    def __init__(self):
-        self.num_class = 100
-        self.shot = 5
-        self.query = 5
-        self.query_val = 15
-        self.n_base = 80
-        self.train_way = 20
-        self.test_way = 5
-        self.feature_dim = 1600
 # Hyper params 
 epochs = 500
 learning_rate = 1e-4
 # Options
-store_name = 'miniImage_PN'
+shot = 5
+dataset = 'miniImage'
+store_name = dataset + '_PN' + '_%dshot'%(shot)
+summary_name = 'runs/' + store_name
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_PN_checkpoint.pth.tar'
 log_interval = 20
@@ -40,26 +35,18 @@ model_path = "./checkpoint"
 start_epoch = 0
 best_acc = 0.00
 # Get args
-args = Arguments()
+args = Arguments(shot,dataset)
 # Use specific gpus
 os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Use writer to record
-writer = SummaryWriter(os.path.join('runs/miniImage_pn', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
+writer = SummaryWriter(os.path.join(summary_name, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
 # Prepare dataset & dataloader
-trainset = MiniImageNet('trainval')
-train_sampler = CategoriesSampler_train_100way(trainset.label, 100,
-                        args.train_way, args.shot, args.query, args.n_base)
-train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler,
-                        num_workers=num_workers, pin_memory=True)
-valset = MiniImageNet('test')
-val_sampler = CategoriesSampler_val_100way(valset.label, 100,
-                        args.test_way, args.shot, args.query_val)
-val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
-                        num_workers=num_workers, pin_memory=True)
+train_loader, val_loader = getDataloader(dataset, args)
+
 model_cnn = gcrConvnet().to(device)
 model = PN(model_cnn,lstm_input_size=args.feature_dim,train_way=args.train_way,test_way=args.test_way,\
     shot=args.shot,query=args.query,query_val=args.query_val).to(device)

@@ -14,21 +14,17 @@ from utils.ioUtils import *
 from utils.critUtils import loss_for_gcr
 from utils.testUtils import test_100way
 from torch.utils.tensorboard import SummaryWriter
+from utils.dataUtils import getDataloader
+from Arguments import Arguments
 
-class Arguments:
-    def __init__(self):
-        self.num_class = 100
-        self.shot = 5
-        self.query = 5
-        self.query_val = 15
-        self.n_base = 80
-        self.train_way = 20
-        self.test_way = 5
-        self.feature_dim = 1600
 # Hyper params 
 epochs = 1000
 learning_rate = 1e-3
 # Options
+shot = 5
+dataset = 'miniImage'
+store_name = 'test' + dataset + '_GCR_r' + '_%dshot'%(shot)
+summary_name = 'runs/' + store_name
 # checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'#5-shot
 checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200404_miniImage_GCR_r_1shot_best.pth.tar'#1-shot
 log_interval = 20
@@ -39,14 +35,14 @@ model_path = "./checkpoint"
 start_epoch = 0
 best_acc = 0.00
 # Get args
-args = Arguments()
+args = Arguments(shot,dataset)
 # Use specific gpus
 os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Use writer to record
-writer = SummaryWriter(os.path.join('runs/test_miniImage_gcr_r', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
+writer = SummaryWriter(os.path.join(summary_name, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
 # Prepare dataset & dataloader
 valset = MiniImageNet2('trainvaltest')

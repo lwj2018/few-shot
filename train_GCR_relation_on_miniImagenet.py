@@ -14,31 +14,17 @@ from utils.critUtils import loss_for_gcr, loss_for_gcr_relation
 from utils.trainUtils import train_gcr_relation
 from utils.testUtils import eval_gcr_relation
 from torch.utils.tensorboard import SummaryWriter
+from utils.dataUtils import getDataloader
+from Arguments import Arguments
 
-class Arguments:
-    def __init__(self):
-        self.num_class = 100
-
-        # Settings for 5-shot
-        # self.shot = 5
-        # self.query = 5
-        # self.query_val = 15
-        # Settings for 1-shot
-        self.shot = 1
-        self.query = 1
-        self.query_val = 5
-        
-        self.n_base = 80
-        self.train_way = 20
-        self.test_way = 5
-        self.feature_dim = 1600
-# Get args
-args = Arguments()
 # Hyper params 
 epochs = 2000
 learning_rate = 1e-3
 # Options
-store_name = 'miniImage_GCR_r' + '_%dshot'%(args.shot)
+shot = 5
+dataset = 'miniImage'
+store_name = dataset + '_GCR_r' + '_%dshot'%(shot)
+summary_name = 'runs/' + store_name
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 reg_ckpt = None
 global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
@@ -51,27 +37,20 @@ model_path = "./checkpoint"
 
 start_epoch = 0
 best_acc = 0.00
+# Get args
+args = Arguments(shot,dataset)
 # Use specific gpus
 os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Use writer to record
-writer = SummaryWriter(os.path.join('runs/miniImage_gcr_r', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
+writer = SummaryWriter(os.path.join(summary_name, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
 # Prepare dataset & dataloader
-trainset = MiniImageNet('trainvaltest')
-train_sampler = CategoriesSampler_train_100way(trainset.label, 100,
-                        args.train_way, args.shot, args.query, args.n_base)
-train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler,
-                        num_workers=num_workers, pin_memory=True)
-valset = MiniImageNet('trainvaltest')
-val_sampler = CategoriesSampler_val_100way(valset.label, 100,
-                        args.test_way, args.shot, args.query_val)
-val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
-                        num_workers=num_workers, pin_memory=True)
-model_cnn = gcrConvnet().to(device)
+train_loader, val_loader = getDataloader(dataset,args)
 
+model_cnn = gcrConvnet().to(device)
 model = GCR_relation(model_cnn,train_way=args.train_way,\
     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 # Resume model
