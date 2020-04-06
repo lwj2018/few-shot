@@ -6,7 +6,7 @@ from utils.metricUtils import euclidean_metric
 from utils.critUtils import convert_to_onehot
 
 class GCR_ri(nn.Module):
-    def __init__(self,baseModel,global_base=None,global_novel=None,
+    def __init__(self,baseModel,genModel,global_base=None,global_novel=None,
                 train_way=20,test_way=5,
                 shot=5,query=5,query_val=15,f_dim=1600,
                 z_dim=512):
@@ -20,6 +20,7 @@ class GCR_ri(nn.Module):
         self.z_dim = z_dim
 
         self.baseModel = baseModel
+        self.genModel = genModel
         self.registrator = Registrator(f_dim,z_dim)
         self.relation1 = Relation1(2*f_dim)
         self.relation2 = Relation2(2*z_dim)
@@ -39,6 +40,22 @@ class GCR_ri(nn.Module):
         gt = lab[:p].reshape(self.shot, way)[0,:]
         proto = self.baseModel(data_shot)
         proto = proto.reshape(self.shot, way, -1)
+
+        which_novel = torch.gt(gt,79)
+        which_base = args.train_way-torch.numel(gt[which_novel])
+
+        if which_base < args.train_way:
+            proto_base = proto[:,:which_base,:]
+            proto_novel = proto[:,which_base:,:]
+            # Synthesis module corresponds to section 3.2 of the thesis
+            noise = torch.cuda.FloatTensor((args.train_way-which_base)*args.shot, self.f_dim).normal_()
+            proto_novel_gen = self.genModel(proto_novel.reshape(args.shot*(args.train_way-which_base),-1), noise)
+            proto_novel_gen = proto_novel_gen.reshape(args.shot, args.train_way-which_base, -1)
+            proto_novel_wgen = torch.cat([proto_novel,proto_novel_gen])
+            ind_gen = torch.randperm(2*args.shot)
+            proto_novel_f = proto_novel_wgen[ind_gen[:args.shot],:,:]
+            # Corresponds to episodic repesentations in the thesis
+            proto = torch.cat([proto_base, proto_novel_f],1)
 
         proto_final = self.induction(proto)
 

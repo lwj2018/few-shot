@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 
 from models.GCR_ri import GCR_ri
 from models.convnet import gcrConvnet
+from models.Hallucinator import Hallucinator
 from utils.ioUtils import *
 from utils.critUtils import loss_for_gcr, loss_for_gcr_relation
 from utils.trainUtils import train_gcr_relation
@@ -24,10 +25,10 @@ dataset = 'miniImage'
 store_name = dataset + '_GCR_ri' + '_%dshot'%(shot)
 summary_name = 'runs/' + store_name
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
-reg_ckpt = None
 global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
+cnngen_ckpt = None
+gcrr_ckpt = None#'/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'
 checkpoint = None
-gcrr_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'
 log_interval = 20
 device_list = '2'
 model_path = "./checkpoint"
@@ -48,17 +49,19 @@ writer = SummaryWriter(os.path.join(summary_name, time.strftime('%Y-%m-%d %H:%M:
 train_loader, val_loader = getDataloader(dataset,args)
 
 model_cnn = gcrConvnet().to(device)
-model = GCR_ri(model_cnn,train_way=args.train_way,\
+model_gen = Hallucinator(args.feature_dim).to(device)
+model = GCR_ri(model_cnn,model_gen,train_way=args.train_way,\
     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 # Resume model
 if cnn_ckpt is not None:
     resume_cnn_part(model_cnn,cnn_ckpt)
-if reg_ckpt is not None:
-    resume_model(model_reg,reg_ckpt)
-if checkpoint is not None:
-    start_epoch, best_acc = resume_gcr_model(model, checkpoint, args.n_base)
+if cnngen_ckpt is not None:
+    resume_cnn_from_cnn_gen(model_cnn,cnngen_ckpt)
+    resume_gen_from_cnn_gen(model_gen,cnngen_ckpt)
 if gcrr_ckpt is not None:
     resume_gcr_part(model, gcrr_ckpt, args.n_base)
+if checkpoint is not None:
+    start_epoch, best_acc = resume_gcr_model(model, checkpoint, args.n_base)
 global_proto = torch.load(global_ckpt)
 global_proto = global_proto[:args.num_class,:]
 global_proto = torch.Tensor(global_proto)
@@ -66,7 +69,7 @@ global_base = global_proto[:args.n_base,:]
 global_base = global_base.detach().cuda()
 global_novel = global_proto[args.n_base:,:]
 global_novel = global_novel.detach().cuda()
-# model = GCR_relation(model_cnn,global_base=global_base,global_novel=global_novel,train_way=args.train_way,\
+# model = GCR_ri(model_cnn,model_gen,global_base=global_base,global_novel=global_novel,train_way=args.train_way,\
 #     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 # Create loss criterion & optimizer
