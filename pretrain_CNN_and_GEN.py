@@ -10,7 +10,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from datasets.mini_imagenet import MiniImageNet
-from models.convnet import Convnet
+from models.CNN_GEN import CNN_GEN
 from utils.ioUtils import *
 from utils.trainUtils import train_cnn
 from utils.testUtils import eval_cnn
@@ -18,18 +18,19 @@ from torch.utils.tensorboard import SummaryWriter
 from datasets.samplers import CategoriesSampler_train_100way, CategoriesSampler_val_100way
 from Arguments import Arguments
 
+
 # Hyper params 
 epochs = 1000
 learning_rate = 1e-5
 # Options
 shot = 5
 dataset = 'miniImage'
-store_name = 'CNN'
+store_name = 'CNN_GEN'
 gproto_name = 'global_proto'
-# checkpoint = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
+cnn_ckpt = None
 checkpoint = None
 log_interval = 20
-device_list = '1'
+device_list = '0'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -44,7 +45,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=device_list
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Use writer to record
-writer = SummaryWriter(os.path.join('runs/cnn', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
+writer = SummaryWriter(os.path.join('runs/cnn_gen', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))))
 
 # Prepare dataset & dataloader
 trainset = MiniImageNet('trainvaltest')
@@ -57,8 +58,10 @@ val_sampler = CategoriesSampler_val_100way(valset.label, 100,
                         args.test_way, args.shot, args.query_val)
 val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                         num_workers=num_workers, pin_memory=True)
-model = Convnet(out_dim=args.num_class, feature_dim=args.feature_dim).to(device)
+model = CNN_GEN(out_dim=args.num_class, f_dim=args.feature_dim).to(device)
 # Resume model
+if cnn_ckpt is not None:
+    model = resume_cnn_for_cnn_gen(model,cnn_ckpt)
 if checkpoint is not None:
     start_epoch, best_acc = resume_model(model, checkpoint)
 # Create loss criterion & optimizer
@@ -81,7 +84,7 @@ for epoch in range(start_epoch, epochs):
         'state_dict': model.state_dict(),
         'best': best_acc
     }, is_best, model_path, store_name)
-    save_checkpoint(global_proto, is_best, model_path, gproto_name)
+    # save_checkpoint(global_proto, is_best, model_path, gproto_name)
     print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
 print("Training Finished".center(60, '#'))

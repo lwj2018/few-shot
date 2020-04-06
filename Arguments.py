@@ -1,6 +1,5 @@
 class Arguments:
     def __init__(self,shot,dataset):
-        self.num_class = 100
 
         # Settings for 5-shot
         if shot == 5:
@@ -15,8 +14,10 @@ class Arguments:
         
         if dataset == 'miniImage':
             self.n_base = 80
+            self.num_class = 100
         elif dataset == 'omniglot':
             self.n_base = 964
+            self.num_class = 1623
         self.train_way = 20
         self.test_way = 5
         self.feature_dim = 1600
