@@ -11,7 +11,7 @@ def getDataloader(dataset,args):
                                 args.train_way, args.shot, args.query, args.n_base)
         train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler,
                                 num_workers=args.num_workers, pin_memory=True)
-        valset = MiniImageNet('trainvaltest')
+        valset = MiniImageNet('test')
         val_sampler = CategoriesSampler_val_100way(valset.label, 100,
                                 args.test_way, args.shot, args.query_val)
         val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,

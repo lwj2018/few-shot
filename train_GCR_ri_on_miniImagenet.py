@@ -20,7 +20,7 @@ epochs = 2000
 learning_rate = 1e-4
 # Options
 shot = 5
-dataset = 'omniglot'
+dataset = 'miniImage'
 store_name = dataset + '_GCR_ri' + '_%dshot'%(shot)
 summary_name = 'runs/' + store_name
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
@@ -29,7 +29,7 @@ global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto
 checkpoint = None
 gcrr_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'
 log_interval = 20
-device_list = '0'
+device_list = '2'
 model_path = "./checkpoint"
 
 start_epoch = 0
@@ -74,6 +74,7 @@ criterion = loss_for_gcr_relation()
 
 policies = model.get_finetune_policies(learning_rate)
 optimizer = torch.optim.SGD(policies, momentum=0.9)
+# optimizer = torch.optim.Adam(policies)
 optimizer_cnn = torch.optim.SGD(model.baseModel.parameters(), lr=learning_rate,momentum=0.9)
 
 lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30,60], gamma=0.1)
