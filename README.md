@@ -13,6 +13,6 @@ Refer to https://github.com/huang-paper-code/fsl-global
     - the model
     - train & eval functions
     - criterion
-    - some hyper parameters if neccessar
+    - some hyper parameters if neccessary
     - store name & summary name
 

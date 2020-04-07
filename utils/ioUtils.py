@@ -56,7 +56,7 @@ def resume_cnn_part(model, checkpoint):
 def resume_cnn_from_cnn_gen(model, checkpoint):
     params_dict = torch.load(checkpoint)
     state_dict = params_dict['state_dict']
-    state_dict = {'.'join(k.split('.')[1:]) : v for k,v in state_dict.items() if 'cnn' in k \
+    state_dict = {'.'.join(k.split('.')[1:]) : v for k,v in state_dict.items() if 'cnn' in k 
         and not 'fc' in k}
     model.load_state_dict(state_dict)
 
@@ -69,7 +69,7 @@ def resume_cnn_from_cnn_gen(model, checkpoint):
 def resume_gen_from_cnn_gen(model, checkpoint):
     params_dict = torch.load(checkpoint)
     state_dict = params_dict['state_dict']
-    state_dict = {'.'join(k.split('.')[1:]) : v for k,v in state_dict.items() if 'gen' in k}
+    state_dict = {'.'.join(k.split('.')[1:]) : v for k,v in state_dict.items() if 'gen' in k}
     model.load_state_dict(state_dict)
 
     epoch = params_dict['epoch']

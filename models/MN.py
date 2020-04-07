@@ -63,7 +63,7 @@ class MN(nn.Module):
         distances = euclidean_metric(queries, support)
 
         # Calculate "attention" as softmax over support-query distances
-        attention = (distances).softmax(dim=1)
+        attention = (distances)#.softmax(dim=1)
 
         # Calculate predictions as in equation (1) from Matching Networks
         # y_hat = \sum_{i=1}^{k} a(x_hat, x_i) y_i
@@ -101,7 +101,7 @@ def matching_net_predictions(attention: torch.Tensor, n: int, k: int, q: int) ->
 
     # Unsqueeze to force y to be of shape (K*n, 1) as this
     # is needed for .scatter()
-    y = create_nshot_task_label(k, n).unsqueeze(-1)
+    y = create_nshot_task_label_t(k, n).unsqueeze(-1)
     y_onehot = y_onehot.scatter(1, y, 1)
 
     y_pred = torch.mm(attention, y_onehot.cuda().float())

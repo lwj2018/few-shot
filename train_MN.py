@@ -19,7 +19,7 @@ from Arguments import Arguments
 
 # Hyper params 
 epochs = 500
-learning_rate = 1e-3
+learning_rate = 1e-4
 # Options
 shot = 5
 dataset = 'miniImage'
@@ -28,7 +28,7 @@ summary_name = 'runs/' + store_name
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 checkpoint = None
 log_interval = 20
-device_list = '1'
+device_list = '2'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -60,7 +60,7 @@ if checkpoint is not None:
 criterion = nn.CrossEntropyLoss()
 
 policies = model.get_optim_policies(learning_rate)
-optimizer = torch.optim.Adam(policies,lr=learning_rate)
+optimizer = torch.optim.SGD(policies)
 
 lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30,60], gamma=0.1)
 

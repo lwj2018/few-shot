@@ -68,3 +68,5 @@ def getMNloader(dataset,args):
                                 args.test_way, args.shot, args.query_val)
         val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler,
                                 num_workers=args.num_workers, pin_memory=True)
+
+    return train_loader, val_loader
