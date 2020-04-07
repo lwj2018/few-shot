@@ -41,21 +41,22 @@ class GCR_ri(nn.Module):
         proto = self.baseModel(data_shot)
         proto = proto.reshape(self.shot, way, -1)
 
-        which_novel = torch.gt(gt,79)
-        which_base = args.train_way-torch.numel(gt[which_novel])
+        if mode == 'train':
+            which_novel = torch.gt(gt,79)
+            which_base = way-torch.numel(gt[which_novel])
 
-        if which_base < args.train_way:
-            proto_base = proto[:,:which_base,:]
-            proto_novel = proto[:,which_base:,:]
-            # Synthesis module corresponds to section 3.2 of the thesis
-            noise = torch.cuda.FloatTensor((args.train_way-which_base)*args.shot, self.f_dim).normal_()
-            proto_novel_gen = self.genModel(proto_novel.reshape(args.shot*(args.train_way-which_base),-1), noise)
-            proto_novel_gen = proto_novel_gen.reshape(args.shot, args.train_way-which_base, -1)
-            proto_novel_wgen = torch.cat([proto_novel,proto_novel_gen])
-            ind_gen = torch.randperm(2*args.shot)
-            proto_novel_f = proto_novel_wgen[ind_gen[:args.shot],:,:]
-            # Corresponds to episodic repesentations in the thesis
-            proto = torch.cat([proto_base, proto_novel_f],1)
+            if which_base < way:
+                proto_base = proto[:,:which_base,:]
+                proto_novel = proto[:,which_base:,:]
+                # Synthesis module corresponds to section 3.2 of the thesis
+                noise = torch.cuda.FloatTensor((way-which_base)*self.shot, self.f_dim).normal_()
+                proto_novel_gen = self.genModel(proto_novel.reshape(self.shot*(way-which_base),-1), noise)
+                proto_novel_gen = proto_novel_gen.reshape(self.shot, way-which_base, -1)
+                proto_novel_wgen = torch.cat([proto_novel,proto_novel_gen])
+                ind_gen = torch.randperm(2*self.shot)
+                proto_novel_f = proto_novel_wgen[ind_gen[:self.shot],:,:]
+                # Corresponds to episodic repesentations in the thesis
+                proto = torch.cat([proto_base, proto_novel_f],1)
 
         proto_final = self.induction(proto)
 
@@ -82,6 +83,7 @@ class GCR_ri(nn.Module):
 
     def get_optim_policies(self,lr):
         return [
+            {'params':self.genModel.parameters(),'lr':lr},
             {'params':self.registrator.parameters(),'lr':lr},
             {'params':self.relation1.parameters(),'lr':lr},
             {'params':self.relation2.parameters(),'lr':lr},
@@ -92,6 +94,7 @@ class GCR_ri(nn.Module):
 
     def get_finetune_policies(self,lr):
         return [
+            {'params':self.genModel.parameters(),'lr':lr},
             {'params':self.registrator.parameters(),'lr':lr},
             {'params':self.relation1.parameters(),'lr':lr},
             {'params':self.relation2.parameters(),'lr':lr},

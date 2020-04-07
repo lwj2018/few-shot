@@ -83,7 +83,7 @@ def resume_cnn_from_cnn_gen(model, checkpoint):
     model_dict = model.state_dict()
     params_dict = torch.load(checkpoint)
     state_dict = params_dict['state_dict']
-    state_dict = {'cnn.'+k : v for k,v in state_dict.items()}
+    state_dict = {'.'.join(k.split('.')[1:]) : v for k,v in state_dict.items() if not 'fc' in k}
     model_dict.update(state_dict)
     model.load_state_dict(model_dict)
 
