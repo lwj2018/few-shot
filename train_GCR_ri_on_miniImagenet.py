@@ -62,13 +62,7 @@ if gcrr_ckpt is not None:
     resume_gcr_part(model, gcrr_ckpt, args.n_base)
 if checkpoint is not None:
     start_epoch, best_acc = resume_gcr_model(model, checkpoint, args.n_base)
-global_proto = torch.load(global_ckpt)
-global_proto = global_proto[:args.num_class,:]
-global_proto = torch.Tensor(global_proto)
-global_base = global_proto[:args.n_base,:]
-global_base = global_base.detach().cuda()
-global_novel = global_proto[args.n_base:,:]
-global_novel = global_novel.detach().cuda()
+global_base, global_novel = load_global_proto(global_ckpt,args)
 # model = GCR_ri(model_cnn,model_gen,global_base=global_base,global_novel=global_novel,train_way=args.train_way,\
 #     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 

@@ -1,5 +1,6 @@
 runs
 checkpoint
+.vscode
 *.pyc
 *pycache*
 *.pth
