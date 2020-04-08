@@ -72,7 +72,7 @@ for epoch in range(start_epoch, start_epoch+1):
     print('Batch accu_a on miniImagenet: {:.3f}'.format(acc))
     acc = test_100way(model,criterion,val_loader2,device,epoch,log_interval,writer,args,model.relation1)
     print('Batch accu_b on miniImagenet: {:.3f}'.format(acc))
-    acc = test_100way(model,criterion,val_loader3,device,epoch,log_interval,writer,args,model.relation1,'test')
+    acc = test_100way(model,criterion,val_loader3,device,epoch,log_interval,writer,args,model.relation1)
     print('Batch accu_n on miniImagenet: {:.3f}'.format(acc))
 
 print("Test Finished".center(60, '#'))

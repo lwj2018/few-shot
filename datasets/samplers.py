@@ -8,12 +8,14 @@ class CategoriesSampler():
         self.n_cls = n_cls
         self.n_per = n_per
 
+        label_set = list(set(label))
+        self.label_set = label_set
         label = np.array(label)
-        self.m_ind = []
-        for i in range(max(label) + 1):
+        self.m_ind = {}
+        for i in label_set:
             ind = np.argwhere(label == i).reshape(-1)
             ind = torch.from_numpy(ind)
-            self.m_ind.append(ind)
+            self.m_ind[i] = ind
 
     def __len__(self):
         return self.n_batch
@@ -21,7 +23,7 @@ class CategoriesSampler():
     def __iter__(self):
         for i_batch in range(self.n_batch):
             batch = []
-            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            classes = np.random.permutation(self.label_set)[:self.n_cls]
             for c in classes:
                 l = self.m_ind[c]
                 pos = torch.randperm(len(l))[:self.n_per]
@@ -39,12 +41,14 @@ class CategoriesSampler_train():
         self.n_query = n_query
         self.n_base_class = n_base_class
 
+        label_set = list(set(label))
+        self.label_set = label_set
         label = np.array(label)
-        self.m_ind = []
-        for i in range(max(label) + 1):
+        self.m_ind = {}
+        for i in label_set:
             ind = np.argwhere(label == i).reshape(-1)
             ind = torch.from_numpy(ind)
-            self.m_ind.append(ind)
+            self.m_ind[i] = ind
 
     def __len__(self):
         return self.n_batch
@@ -54,7 +58,7 @@ class CategoriesSampler_train():
             batch = []
             query_batch = []
             shot_batch = []
-            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            classes = np.random.permutation(self.label_set)[:self.n_cls]
             classes,order =classes.sort()
             for c in classes:
                 if c < self.n_base_class:
@@ -89,12 +93,14 @@ class CategoriesSampler_train_repeat():
         self.n_query = n_query
         self.n_base_class = n_base_class
 
+        label_set = list(set(label))
+        self.label_set = label_set
         label = np.array(label)
-        self.m_ind = []
-        for i in range(max(label) + 1):
+        self.m_ind = {}
+        for i in label_set:
             ind = np.argwhere(label == i).reshape(-1)
             ind = torch.from_numpy(ind)
-            self.m_ind.append(ind)
+            self.m_ind[i] = ind
 
     def __len__(self):
         return self.n_batch
@@ -104,7 +110,7 @@ class CategoriesSampler_train_repeat():
             batch = []
             query_batch = []
             shot_batch = []
-            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            classes = np.random.permutation(self.label_set)[:self.n_cls]
             classes,order =classes.sort()
 
             for c in classes:
@@ -133,13 +139,14 @@ class CategoriesSampler_train_100way():
         self.n_query = n_query
         self.n_base_class = n_base_class
 
+        label_set = list(set(label))
+        self.label_set = label_set
         label = np.array(label)
-        self.m_ind = []
-        # build the mapping dict: label -> samples belong to this label
-        for i in range(max(label) + 1):
+        self.m_ind = {}
+        for i in label_set:
             ind = np.argwhere(label == i).reshape(-1)
             ind = torch.from_numpy(ind)
-            self.m_ind.append(ind)
+            self.m_ind[i] = ind
 
     def __len__(self):
         return self.n_batch
@@ -150,7 +157,7 @@ class CategoriesSampler_train_100way():
             query_batch = []
             shot_batch = []
             # 随机选出n_cls个类
-            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            classes = np.random.permutation(self.label_set)[:self.n_cls]
             # 排序以保证基类在前，新类在后
             classes,order =classes.sort()
 
@@ -186,13 +193,14 @@ class CategoriesSampler_train_mn():
         self.n_query = n_query
         self.n_base_class = n_base_class
 
+        label_set = list(set(label))
+        self.label_set = label_set
         label = np.array(label)
-        self.m_ind = []
-        # build the mapping dict: label -> samples belong to this label
-        for i in range(max(label) + 1):
+        self.m_ind = {}
+        for i in label_set:
             ind = np.argwhere(label == i).reshape(-1)
             ind = torch.from_numpy(ind)
-            self.m_ind.append(ind)
+            self.m_ind[i] = ind
 
     def __len__(self):
         return self.n_batch
@@ -203,7 +211,7 @@ class CategoriesSampler_train_mn():
             query_batch = []
             shot_batch = []
             # 随机选出n_cls个类
-            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            classes = np.random.permutation(self.label_set)[:self.n_cls]
             # 排序以保证基类在前，新类在后
             classes,order =classes.sort()
 
@@ -240,12 +248,14 @@ class CategoriesSampler_val_100way():
         self.n_shot = n_shot
         self.n_query = n_query
 
+        label_set = list(set(label))
+        self.label_set = label_set
         label = np.array(label)
-        self.m_ind = []
-        for i in range(max(label) + 1):
+        self.m_ind = {}
+        for i in label_set:
             ind = np.argwhere(label == i).reshape(-1)
             ind = torch.from_numpy(ind)
-            self.m_ind.append(ind)
+            self.m_ind[i] = ind
 
     def __len__(self):
         return self.n_batch
@@ -254,7 +264,7 @@ class CategoriesSampler_val_100way():
         for i_batch in range(self.n_batch):
             batch = []
             # 随机选出n_cls个类
-            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            classes = np.random.permutation(self.label_set)[:self.n_cls]
             for c in classes:
                 l = self.m_ind[c]
                 #pos = torch.cat([torch.Tensor(range(0,self.n_shot)).type(torch.LongTensor), self.n_shot+torch.randperm(len(l)-self.n_shot)[:self.n_query]])
@@ -273,12 +283,14 @@ class CategoriesSampler_val_mn():
         self.n_shot = n_shot
         self.n_query = n_query
 
+        label_set = list(set(label))
+        self.label_set = label_set
         label = np.array(label)
-        self.m_ind = []
-        for i in range(max(label) + 1):
+        self.m_ind = {}
+        for i in label_set:
             ind = np.argwhere(label == i).reshape(-1)
             ind = torch.from_numpy(ind)
-            self.m_ind.append(ind)
+            self.m_ind[i] = ind
 
     def __len__(self):
         return self.n_batch
@@ -287,7 +299,7 @@ class CategoriesSampler_val_mn():
         for i_batch in range(self.n_batch):
             batch = []
             # 随机选出n_cls个类
-            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            classes = np.random.permutation(self.label_set)[:self.n_cls]
             for c in classes:
                 l = self.m_ind[c]
                 # 前n_shot个样本作为支撑集，之后的样本中取n_query个作为query set
@@ -308,12 +320,14 @@ class CategoriesSampler_val():
         self.n_shot = n_shot
         self.n_query = n_query
 
+        label_set = list(set(label))
+        self.label_set = label_set
         label = np.array(label)
-        self.m_ind = []
-        for i in range(max(label) + 1):
+        self.m_ind = {}
+        for i in label_set:
             ind = np.argwhere(label == i).reshape(-1)
             ind = torch.from_numpy(ind)
-            self.m_ind.append(ind)
+            self.m_ind[i] = ind
 
     def __len__(self):
         return self.n_batch
@@ -322,7 +336,7 @@ class CategoriesSampler_val():
         for i_batch in range(self.n_batch):
             batch = []
             # 随机选出n_cls个类
-            classes = torch.randperm(len(self.m_ind))[:self.n_cls]
+            classes = np.random.permutation(self.label_set)[:self.n_cls]
             for c in classes:
                 l = self.m_ind[c]
                 # 前n_shot个样本作为支撑集，之后的样本中取n_query个作为query set

@@ -116,8 +116,7 @@ def eval_gcr(model, criterion,
 
 def test_100way(model, criterion,
           valloader, device, epoch, 
-          log_interval, writer, args, relation,
-          set = 'trainvaltest'):
+          log_interval, writer, args, relation):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     avg_loss = AverageMeter()
@@ -145,8 +144,6 @@ def test_100way(model, criterion,
         logits = relation(proto,global_set)
         
         # compute the loss
-        if set=='test':
-            lab = lab+80
         loss = criterion(logits, lab)
 
         # compute the metrics

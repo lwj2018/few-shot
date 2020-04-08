@@ -22,16 +22,11 @@ class MiniImageNet2(Dataset):
 
         data = []
         label = []
-        lb = -1
-
-        self.wnids = []
 
         for l in lines:
-            name, wnid = l.split(',')
+            name, lb = l.split(',')
             path = osp.join(image_root, name)
-            if wnid not in self.wnids:
-                self.wnids.append(wnid)
-                lb += 1
+            lb = int(lb)
             data.append(path)
             label.append(lb)
 
