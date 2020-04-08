@@ -5,8 +5,6 @@ def create_nshot_task_label(k: int, q: int) -> torch.Tensor:
     Label has the structure:
         [0,1,2,..,k-1]*q
 
-    # TODO: Test this
-
     # Arguments
         k: Number of classes in the n-shot classification task
         q: Number of query samples for each class in the n-shot classification task
@@ -22,8 +20,6 @@ def create_nshot_task_label_t(k: int, q: int) -> torch.Tensor:
 
     Label has the structure:
         [0]*q, [1]*q, ... , [k-1]*q
-
-    # TODO: Test this
 
     # Arguments
         k: Number of classes in the n-shot classification task

@@ -18,7 +18,7 @@ from utils.dataUtils import getMNloader
 from Arguments import Arguments
 
 # Hyper params 
-epochs = 500
+epochs = 1000
 learning_rate = 1e-4
 # Options
 shot = 5
@@ -28,7 +28,7 @@ summary_name = 'runs/' + store_name
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 checkpoint = None
 log_interval = 20
-device_list = '2'
+device_list = '0'
 num_workers = 8
 model_path = "./checkpoint"
 

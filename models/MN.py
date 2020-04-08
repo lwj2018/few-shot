@@ -68,6 +68,7 @@ class MN(nn.Module):
         # Calculate predictions as in equation (1) from Matching Networks
         # y_hat = \sum_{i=1}^{k} a(x_hat, x_i) y_i
         y_pred = matching_net_predictions(attention, self.shot, way, query)
+        # y_pred = y_pred.log()
         label = create_nshot_task_label_t(way,query).cuda()
         return y_pred, label
 

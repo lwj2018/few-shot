@@ -28,7 +28,7 @@ cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.ta
 global_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/global_proto_best.pth'
 cnngen_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200407_CNN_GEN_checkpoint.pth.tar'
 gcrr_ckpt = None#'/home/liweijie/projects/few-shot/checkpoint/20200403_miniImage_GCR_r_checkpoint.pth.tar'
-checkpoint = None
+checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_GCR_ri_5shot_best.pth.tar'
 log_interval = 20
 device_list = '2'
 model_path = "./checkpoint"
@@ -50,8 +50,8 @@ train_loader, val_loader = getDataloader(dataset,args)
 
 model_cnn = gcrConvnet().to(device)
 model_gen = Hallucinator(args.feature_dim).to(device)
-# model = GCR_ri(model_cnn,model_gen,train_way=args.train_way,\
-#     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
+model = GCR_ri(model_cnn,model_gen,train_way=args.train_way,\
+    test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 # Resume model
 if cnn_ckpt is not None:
     resume_cnn_part(model_cnn,cnn_ckpt)
@@ -69,8 +69,8 @@ global_base = global_proto[:args.n_base,:]
 global_base = global_base.detach().cuda()
 global_novel = global_proto[args.n_base:,:]
 global_novel = global_novel.detach().cuda()
-model = GCR_ri(model_cnn,model_gen,global_base=global_base,global_novel=global_novel,train_way=args.train_way,\
-    test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
+# model = GCR_ri(model_cnn,model_gen,global_base=global_base,global_novel=global_novel,train_way=args.train_way,\
+#     test_way=args.test_way, shot=args.shot,query=args.query,query_val=args.query_val).to(device)
 
 # Create loss criterion & optimizer
 criterion = loss_for_gcr_relation()

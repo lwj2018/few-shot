@@ -42,14 +42,14 @@ class Arguments:
         self.feature_dim = 1600
         # Hyper params for maml
         self.inner_train_steps = 1
-        self.inner_lr = 0.1
+        self.inner_lr = 0.4
         self.order = 1
         # Options
         self.num_workers = 8
 
 # Hyper params 
-epochs = 500
-learning_rate = 1e-4
+epochs = 1000
+learning_rate = 1e-3
 order = 1
 # Options
 shot = 5
@@ -59,7 +59,7 @@ summary_name = 'runs/' + store_name
 cnn_ckpt = None#'/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
 checkpoint = None
 log_interval = 20
-device_list = '1'
+device_list = '0'
 num_workers = 8
 model_path = "./checkpoint"
 
@@ -90,8 +90,8 @@ if checkpoint is not None:
 criterion = nn.CrossEntropyLoss()
 
 policies = model.get_optim_policies(learning_rate)
-# optimizer = torch.optim.SGD(policies, momentum=0.9)
-optimizer = torch.optim.SGD(policies, momentum=0.9)
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+# optimizer = torch.optim.SGD(model.parameters(),lr=learning_rate, momentum=0.9)
 
 lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[30,60], gamma=0.1)
 

@@ -18,7 +18,7 @@ from utils.dataUtils import getDataloader
 from Arguments import Arguments
 
 # Hyper params 
-epochs = 500
+epochs = 1000
 learning_rate = 1e-4
 # Options
 shot = 5
@@ -26,7 +26,7 @@ dataset = 'miniImage'
 store_name = dataset + '_PN' + '_%dshot'%(shot)
 summary_name = 'runs/' + store_name
 cnn_ckpt = '/home/liweijie/projects/few-shot/checkpoint/20200329/CNN_best.pth.tar'
-checkpoint = '/home/liweijie/projects/few-shot/checkpoint/miniImage_PN_checkpoint.pth.tar'
+checkpoint = None#'/home/liweijie/projects/few-shot/checkpoint/miniImage_PN_checkpoint.pth.tar'
 log_interval = 20
 device_list = '1'
 num_workers = 8
